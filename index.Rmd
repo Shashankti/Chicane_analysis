@@ -157,7 +157,9 @@ per <- lit*100
 for(i in 1:length(kls)){
   kls[[i]]$per <- per[i]
 }
-df <- data.table(unq,per)
+#df <- data.table(unq,per)
+rm(yyy)
+gc()
 ```
 
 ## Trans vs cis interactions
