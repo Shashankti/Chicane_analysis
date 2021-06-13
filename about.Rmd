@@ -1,0 +1,23 @@
+---
+title: "About Data"
+---
+
+Output format from chicane run.
+
+* target.id <- Target fragment involved in the interaction in the format of chromosome:start-end
+* bait.id <- Bait fragment involved in the interaction, same format as target.id
+* target.chr <- Chromosome of target fragment
+* target.start <- Start position of target fragment
+* target.end <- End position of target fragment
+* bait.chr <- Chromosome of bait fragment
+* bait.start <- Start position of bait fragment
+* bait.end <- End position of bait fragment
+* bait.to.bait <- Logical indicating if the interaction is between two bait fragments
+* count.n <- Number of counts in replicate n (where n represents replicate number, this will appear for each replicate              included in a call that includes replicate merging)
+* bait.trans.count<-Number of counts between bait fragment and fragments on another chromosome
+* target.trans.count <- Number of counts between target fragment and fragments on another chromosome
+* distance <- Distance in bp between center of bait fragment and center of target fragment on same chromosome (cis).                NA indicates fragments on different chromosomes (trans)
+* count <- Sum of the counts from all replicates (observed)
+* expected <- Counts expected by the model
+* p.value <- P-value of observed vs. expected counts
+* q.value <- Multiple testing corrected P-value

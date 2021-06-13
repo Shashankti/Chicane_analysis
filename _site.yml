@@ -1,0 +1,9 @@
+name: "Chicane-analysis"
+output_dir: "."
+navbar:
+  title: "Chicane-analysis"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "About Data"
+      href: about.html
