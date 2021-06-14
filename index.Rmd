@@ -33,6 +33,7 @@ library(plyr)
 library(dplyr)
 library(stringr)
 library(hrbrthemes)
+library(viridis)
 
 ibed <- fread("/home/master/radicl_seq/Run_chicago/Data/chicane.results.rdcl.txt",header=TRUE,stringsAsFactors = FALSE,quote = "")
 
@@ -56,11 +57,11 @@ yyy$len <- ifelse(yyy$rnachrom==yyy$dnachrom,yyy$len,NA)
 CHiCANE was designed to identify regions of interest that interact more than expected by chance. To indetify the interaction peaks, CHiCANE models the expected number of reads linking two restriction fragments as a function of the distance between the loci and the ‘interactibility’ of the bait fragment; that is, its inherent propensity to interact with other fragments.
 
 Let $Y_{ij}$ represent the count of interactions between a bait $i$ and a fragment $j$,$d_{ij}$ be the distance between the bait and the otherEnd and $t_{i}$ denote the number of reads linking a bait $i$ with another fragment in trans. $Y_{ij}$ is such that it is assumed to follow a distribution with a mean $\mu_{ij}$ as:
-$$ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij} + \beta_2 \log(t_i+1) $$
+$$ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij}) + \beta_2 \log(t_i+1) $$
 
 
 For bait to bait interactions, terms are added to the model to adjust for trans counts of the other end, fragment j, and the product of trans counts of both fragments as:
-$$ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij} + \beta_2 \log(t_i+1)  + \beta_3 \log(t_j + 1) + \beta_4 \log(t_i +1) \log(t_j+1)$$
+$$ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij}) + \beta_2 \log(t_i+1)  + \beta_3 \log(t_j + 1) + \beta_4 \log(t_i +1) \log(t_j+1)$$
 Each possible interaction is assaigned an expected $\mu_{ij}$ and a p-value for the observed counts $y_{ij}$ versus what is expected by chance is calculated as:
 $$p = P(Y_{ij} \geq y_{ij})$$
 
@@ -101,25 +102,63 @@ plot(n2)
 We can sort the significant interactions using a threshold of 0.05
 
 ```{r,echo=FALSE}
-signif <-ibed[ibed$q.value<0.05]
-ggplot(signif,aes(x=distance,y=q.value,color=count))+
+signif <-ibed[ibed$q.value<0.05,]
+ggplot(signif,aes(x=distance,y=log(q.value),color=count))+
     scale_color_gradient(high="red",low="#69b3a2")+
     theme_ipsum()+
-    geom_point()
+    geom_point(alpha=0.1,size=0.1)
 ```
 
+
+Here is a table of the highest q-values observed
+```{r,echo=FALSE}
+signif <- signif[with(signif,order(q.value)),]
+
+
+signif[1:10,]
+```
+We also look to analyse what is the proportion of bait-to-bait,cis and trans interactions in the significant interactions
+
+```{r,echo=FALSE}
+  total <- nrow(signif);
+  trans.prop <- sum(is.na(signif$distance))/total;
+  cis.prop <- sum(!is.na(signif$distance))/total;
+  b2b.prop <- sum(signif$bait.to.bait)/total;
+  int.data <- c('trans' = trans.prop, 'cis' = cis.prop, 'bait.to.bait' = b2b.prop);
+  print(int.data);
+
+  # get number of interactions by distance bins
+  binned.data <- NULL;
+
+  distance.bins <- list(
+    "0-10kbp" = c(0, 1e4),
+    "10-100kbp" = c(1e4, 1e5),
+    "100kbp-1Mbp" = c(1e5, 1e6),
+    "1-10Mbp" = c(1e6, 1e7),
+    "10-100Mbp" = c(1e7, 1e8),
+    "100-1000Mbp" = c(1e8, 1e9)
+    );
+
+  for(dist.i in names(distance.bins)){
+    bin.sum <- length(which(signif$distance >= distance.bins[[dist.i]][1] & signif$distance < distance.bins[[dist.i]][2]));
+    binned.data <- cbind(binned.data, bin.sum);
+    }
+
+  colnames(binned.data) <- names(distance.bins);
+  print(binned.data);
+```
 ## Distribution of number of reads wrt to distance and score
 
 We look at the distribution of read count and scores with the distance of the interaction
 
 ```{r,echo=FALSE,fig.show="hold",out.width="50%",fig.cap="Distribution of N-reads"}
 #N_reads_example
-n1<- ggplot(ex,aes(x=distance,y=count))+
-  geom_point(color="#69b3a2")+
+n1<- ggplot(ibed[is.na(ibed$distance),],aes(x=distance,y=count))+
+  geom_point(color="#69b3a2",alpha=0.1,size=0.2)+
   theme_ipsum()+
   ggtitle("Distribution of N-reads for example data")
 n2 <- ggplot(ibed, aes(x = distance, y = count)) +
-  geom_point(color="#69b3a2") +
+  geom_point(color="#69b3a2",size=0.2,alpha=0.1) +
   ggtitle("Distribution of N-reads for our data")+
   theme_ipsum()
 plot(n1)
@@ -127,26 +166,46 @@ plot(n2)
 ```
 
 # Score relationship with distance
+
+Another plot to compare is the distribution of the q.value with respect to the distance of the interactions.
+
 ```{r,echo=FALSE,fig.show="hold",out.width="50%",fig.cap="Distribution of q.value"}
 #N_reads_example
-n1<- ggplot(ex,aes(x=distance,y=q.value,color=count))+
-  geom_point(color="#69b3a2")+
+n1<- ggplot(ex,aes(x=distance,y=log(q.value),color=count))+
+  geom_point(color="#69b3a2",size=0.5,alpha=0.1)+
   theme_ipsum()+
   ggtitle("Distribution of score for example data")
-n2 <- ggplot(ibed, aes(x = distance, y = q.value,color=count)) +
-  geom_point(color="#69b3a2") +
+n2 <- ggplot(ibed, aes(x = distance, y = log(q.value),color=count)) +
+  geom_point(color="#69b3a2",size=0.5,alpha=0.1) +
   ggtitle("Distribution of score for our data")+
   theme_ipsum()
 plot(n1)
 plot(n2)
 ```
 
-# Percentage of genome covered
-The following plot indicated what fraction of reads for each RNA are on its home chromosome.
 
-```{r,echo=FALSE}
-unq <- unique(yyy$rnaID)
-unq <- noquote(unq)
+# Correlation plot
+
+We can plot the correlation between the count of each interaction with the $p$-value. 
+```{r,echo=FALSE,message=FALSE}
+cor_test <- cor.test(ibed$count,ibed$p.value,method = "spearman",exact = F)
+plt_text <- paste0('r = ', round(cor_test$estimate,3), ', ',
+                paste('p-value < 2.2e-16'))#taken from res of cor_test
+setorder(ibed,distance)
+ggplot(data=ibed,aes(x = count, y = log(p.value),colour=distance))+ 
+  geom_point(alpha=0.5,size=0.2) + 
+  geom_smooth(method = "lm", se = T,formula='y ~ x',
+                color = 'grey20', alpha = 0.4) +
+  annotate('text', x = -Inf, y = Inf, hjust = -.1, vjust = 1  ,label=plt_text)+
+  labs(y= "Log P-Value", x = "Interaction Counts")  +
+  theme_ipsum()+
+  scale_color_viridis()
+```
+# Percentage of genome covered
+The following plot indicates what fraction of reads for each RNA are on its home chromosome.
+
+```{r,echo=FALSE,message=FALSE}
+unq <- unique(yyy[order(yyy$rnaID)]$rnaID)
 bedsplit <- split(ibed,ibed$bait_name)
 kls <- split(yyy,yyy$rnaID)
 lit=NULL
@@ -154,10 +213,12 @@ for (i in 1:length(unq)){
   lit[i] = length(which(is.na(kls[[i]]$len)))/length(kls[[i]]$rnachrom)
 }
 per <- lit*100
-for(i in 1:length(kls)){
-  kls[[i]]$per <- per[i]
-}
-#df <- data.table(unq,per)
+df <- data.table(unq,per)
+ggplot(df,aes(unq,per))+
+  geom_point(alpha=0.1,size=0.2,color="#69b3a2")+
+  xlab("RNAs")+
+  ylab("Percentage of trans interactions")
+
 rm(yyy)
 gc()
 ```
@@ -209,11 +270,11 @@ plot(p)
 
 plot_list = list()
 for (i in 1:length(bedsplit)){
-  p = ggplot(bedsplit[[i]],aes(x=distance,y=q.value,color=count))+
+  p = ggplot(bedsplit[[i]],aes(x=distance,y=log(q.value),color=count))+
     scale_color_gradient(high="red",low="#69b3a2")+
     ggtitle(bedsplit[[i]]$bait_name[1])+
     theme_ipsum()+
-    geom_point()
+    geom_point(alpha=0.5,size=0.5)
   plot_list[[i]]=p
 }
 ```
@@ -224,4 +285,23 @@ plot(plot_list[[30434]])
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 plot(plot_list[[39128]])
 ```
+We can compare these plots to the cases where significant interactions are found. Such as,
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+plot(plot_list[[22453]])
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+plot(plot_list[[43375]])
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+plot(plot_list[[33144]])
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+plot(plot_list[[22640]])
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+plot(plot_list[[35102]])
+```
 
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+plot(plot_list[[21543]])
+```
