@@ -106,7 +106,7 @@ signif <-ibed[ibed$q.value<0.05,]
 ggplot(signif,aes(x=distance,y=log(q.value),color=count))+
     scale_color_gradient(high="red",low="#69b3a2")+
     theme_ipsum()+
-    geom_point(alpha=0.1,size=0.1)
+    geom_point(alpha=0.3,size=0.5)
 ```
 
 
@@ -154,11 +154,11 @@ We look at the distribution of read count and scores with the distance of the in
 ```{r,echo=FALSE,fig.show="hold",out.width="50%",fig.cap="Distribution of N-reads"}
 #N_reads_example
 n1<- ggplot(ibed[is.na(ibed$distance),],aes(x=distance,y=count))+
-  geom_point(color="#69b3a2",alpha=0.1,size=0.2)+
+  geom_point(color="#69b3a2",alpha=0.3,size=0.2)+
   theme_ipsum()+
   ggtitle("Distribution of N-reads for example data")
 n2 <- ggplot(ibed, aes(x = distance, y = count)) +
-  geom_point(color="#69b3a2",size=0.2,alpha=0.1) +
+  geom_point(color="#69b3a2",size=0.2,alpha=0.3) +
   ggtitle("Distribution of N-reads for our data")+
   theme_ipsum()
 plot(n1)
@@ -285,7 +285,11 @@ plot(plot_list[[30434]])
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 plot(plot_list[[39128]])
 ```
-We can compare these plots to the cases where significant interactions are found. Such as,
+
+
+### We can compare these plots to the cases where significant interactions are found. Such as,
+
+
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 plot(plot_list[[22453]])
 ```

@@ -302,11 +302,16 @@ Here is a table of the highest q-values observed
 {"columns":[{"label":["target.id"],"name":[1],"type":["chr"],"align":["left"]},{"label":["bait.id"],"name":[2],"type":["chr"],"align":["left"]},{"label":["target.chr"],"name":[3],"type":["chr"],"align":["left"]},{"label":["target.start"],"name":[4],"type":["int"],"align":["right"]},{"label":["target.end"],"name":[5],"type":["int"],"align":["right"]},{"label":["bait.chr"],"name":[6],"type":["chr"],"align":["left"]},{"label":["bait.start"],"name":[7],"type":["int"],"align":["right"]},{"label":["bait.end"],"name":[8],"type":["int"],"align":["right"]},{"label":["bait.to.bait"],"name":[9],"type":["lgl"],"align":["right"]},{"label":["bait.trans.count"],"name":[10],"type":["int"],"align":["right"]},{"label":["target.trans.count"],"name":[11],"type":["int"],"align":["right"]},{"label":["distance"],"name":[12],"type":["dbl"],"align":["right"]},{"label":["count"],"name":[13],"type":["int"],"align":["right"]},{"label":["expected"],"name":[14],"type":["dbl"],"align":["right"]},{"label":["p.value"],"name":[15],"type":["dbl"],"align":["right"]},{"label":["q.value"],"name":[16],"type":["dbl"],"align":["right"]},{"label":["bait_name"],"name":[17],"type":["chr"],"align":["left"]}],"data":[{"1":"chr11:65497688-65506516","2":"chr10:75431624-76560168","3":"chr11","4":"65497688","5":"65506516","6":"chr10","7":"75431624","8":"76560168","9":"TRUE","10":"15428","11":"1017967","12":"NA","13":"816","14":"15.098128","15":"8.647309e-195","16":"5.660528e-191","17":"LRMDA"},{"1":"chr11:65497688-65506516","2":"chr10:65912523-67696195","3":"chr11","4":"65497688","5":"65506516","6":"chr10","7":"65912523","8":"67696195","9":"TRUE","10":"8445","11":"1017967","12":"NA","13":"602","14":"10.872046","15":"1.471637e-181","16":"5.904207e-178","17":"CTNNA3"},{"1":"chr11:65497688-65506516","2":"chr10:76869601-77638369","3":"chr11","4":"65497688","5":"65506516","6":"chr10","7":"76869601","8":"77638369","9":"TRUE","10":"9987","11":"1017967","12":"NA","13":"611","14":"11.912425","15":"5.955975e-172","16":"2.740344e-168","17":"KCNMA1"},{"1":"chr11:65497688-65506516","2":"chr1:56994778-58546734","3":"chr11","4":"65497688","5":"65506516","6":"chr1","7":"56994778","8":"58546734","9":"TRUE","10":"11447","11":"1017967","12":"NA","13":"636","14":"12.831882","15":"2.084479e-169","16":"1.314056e-165","17":"DAB1"},{"1":"chr11:65497688-65506516","2":"chr1:6785454-7769706","3":"chr11","4":"65497688","5":"65506516","6":"chr1","7":"6785454","8":"7769706","9":"TRUE","10":"9019","11":"1017967","12":"NA","13":"567","14":"11.268684","15":"1.684781e-165","16":"9.003467e-162","17":"CAMTA1"},{"1":"chr11:65497688-65506516","2":"chr10:53802771-55627942","3":"chr11","4":"65497688","5":"65506516","6":"chr10","7":"53802771","8":"55627942","9":"TRUE","10":"7661","11":"1017967","12":"NA","13":"525","14":"10.309893","15":"6.794550e-163","16":"2.537765e-159","17":"PCDH15"},{"1":"chr11:65497688-65506516","2":"chr1:87620803-88685204","3":"chr11","4":"65497688","5":"65506516","6":"chr1","7":"87620803","8":"88685204","9":"TRUE","10":"15801","11":"1017967","12":"NA","13":"689","14":"15.295962","15":"2.541817e-160","16":"2.060651e-156","17":"PKN2-AS1"},{"1":"chr11:65497688-65506516","2":"chr10:50990888-52298423","3":"chr11","4":"65497688","5":"65506516","6":"chr10","7":"50990888","8":"52298423","9":"TRUE","10":"24078","11":"1017967","12":"NA","13":"818","14":"19.242720","15":"2.793842e-159","16":"2.641298e-155","17":"PRKG1"},{"1":"chr6:63719980-65707226","2":"chr6:63635802-63779336","3":"chr6","4":"63719980","5":"65707226","6":"chr6","7":"63635802","8":"63779336","9":"TRUE","10":"4774","11":"12409","12":"1006034","13":"3938","14":"31.612910","15":"2.607435e-151","16":"2.245001e-148","17":"PHF3"},{"1":"chr11:65497688-65506516","2":"chr1:48532854-50023954","3":"chr11","4":"65497688","5":"65506516","6":"chr1","7":"48532854","8":"50023954","9":"TRUE","10":"7066","11":"1017967","12":"NA","13":"476","14":"9.865561","15":"2.618277e-151","16":"1.075850e-147","17":"AGBL4"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
+<p>We also look to analyse what is the proportion of bait-to-bait,cis and trans interactions in the significant interactions</p>
+<pre><code>##        trans          cis bait.to.bait 
+##    0.8421752    0.1578248    1.0000000</code></pre>
+<pre><code>##      0-10kbp 10-100kbp 100kbp-1Mbp 1-10Mbp 10-100Mbp 100-1000Mbp
+## [1,]       0       226         670    1207      2901         461</code></pre>
 <div id="distribution-of-number-of-reads-wrt-to-distance-and-score" class="section level2">
 <h2>Distribution of number of reads wrt to distance and score</h2>
 <p>We look at the distribution of read count and scores with the distance of the interaction</p>
 <div class="figure">
-<img src="index_files/figure-html/unnamed-chunk-6-1.png" alt="Distribution of N-reads" width="50%" /><img src="index_files/figure-html/unnamed-chunk-6-2.png" alt="Distribution of N-reads" width="50%" />
+<img src="index_files/figure-html/unnamed-chunk-7-1.png" alt="Distribution of N-reads" width="50%" /><img src="index_files/figure-html/unnamed-chunk-7-2.png" alt="Distribution of N-reads" width="50%" />
 <p class="caption">
 Distribution of N-reads
 </p>
@@ -317,7 +322,7 @@ Distribution of N-reads
 <h1>Score relationship with distance</h1>
 <p>Another plot to compare is the distribution of the q.value with respect to the distance of the interactions.</p>
 <div class="figure">
-<img src="index_files/figure-html/unnamed-chunk-7-1.png" alt="Distribution of q.value" width="50%" /><img src="index_files/figure-html/unnamed-chunk-7-2.png" alt="Distribution of q.value" width="50%" />
+<img src="index_files/figure-html/unnamed-chunk-8-1.png" alt="Distribution of q.value" width="50%" /><img src="index_files/figure-html/unnamed-chunk-8-2.png" alt="Distribution of q.value" width="50%" />
 <p class="caption">
 Distribution of q.value
 </p>
@@ -325,11 +330,11 @@ Distribution of q.value
 </div>
 <div id="correlation-plot" class="section level1">
 <h1>Correlation plot</h1>
-<p>We can plot the correlation between the count of each interaction with the <span class="math inline">\(p\)</span>-value. <img src="index_files/figure-html/unnamed-chunk-8-1.png" width="672" /> # Percentage of genome covered The following plot indicates what fraction of reads for each RNA are on its home chromosome.</p>
-<p><img src="index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
-<pre><code>##             used   (Mb) gc trigger   (Mb)   max used   (Mb)
-## Ncells  11689520  624.3   17671836  943.8   17671836  943.8
-## Vcells 798374066 6091.2 1215778551 9275.7 1070454338 8167.0</code></pre>
+<p>We can plot the correlation between the count of each interaction with the <span class="math inline">\(p\)</span>-value. <img src="index_files/figure-html/unnamed-chunk-9-1.png" width="672" /> # Percentage of genome covered The following plot indicates what fraction of reads for each RNA are on its home chromosome.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre><code>##             used   (Mb) gc trigger    (Mb)   max used   (Mb)
+## Ncells  11612580  620.2   21379345  1141.8   18887469 1008.7
+## Vcells 751562524 5734.0 1346057846 10269.7 1120994008 8552.6</code></pre>
 <div id="trans-vs-cis-interactions" class="section level2">
 <h2>Trans vs cis interactions</h2>
 <p>It should be noted that majority of the interactions in our data are trans interactions(87.9932091), therefore the distance relation of the score can not be visualized easily here.</p>
@@ -338,12 +343,16 @@ Distribution of q.value
 <div id="comparison-with-previous-plots" class="section level2">
 <h2>Comparison with previous plots</h2>
 <p>Previously we had seen certain plots which stood out when looking at the relationship between the probability of detencting an interaction and the distance.</p>
-<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="index_files/figure-html/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
 <div id="we-can-compare-the-plots-for-these-with-plot-of-q.value-vs-distance-for-these-particular-rnas." class="section level3">
 <h3>We can compare the plots for these with plot of q.value vs distance for these particular RNAs.</h3>
-<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-14-1.png" width="672" /> We can compare these plots to the cases where significant interactions are found. Such as, <img src="index_files/figure-html/unnamed-chunk-15-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-16-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-17-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-18-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
-<p><img src="index_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-14-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+</div>
+<div id="we-can-compare-these-plots-to-the-cases-where-significant-interactions-are-found.-such-as" class="section level3">
+<h3>We can compare these plots to the cases where significant interactions are found. Such as,</h3>
+<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-17-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-18-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-19-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 </div>
 </div>
 </div>
