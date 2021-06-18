@@ -9,16 +9,15 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Shashank" />
+<meta name="author" content="Shashank Tiwari" />
 
-<meta name="date" content="2021-11-06" />
 
-<title>Chicane Analysis</title>
+<title>Analysis of Chicane Results</title>
 
 <script src="site_libs/header-attrs-2.8/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/spacelab.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -31,11 +30,11 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
-<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
-<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -46,16 +45,6 @@
   ul.task-list{list-style: none;}
     </style>
 
-<style type="text/css">code{white-space: pre;}</style>
-<script type="text/javascript">
-if (window.hljs) {
-  hljs.configure({languages: []});
-  hljs.initHighlightingOnLoad();
-  if (document.readyState && document.readyState === "complete") {
-    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
-  }
-}
-</script>
 
 
 
@@ -219,7 +208,73 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
 
 
 
@@ -229,6 +284,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -261,11 +326,19 @@ $(document).ready(function () {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
 
 
-<h1 class="title toc-ignore">Chicane Analysis</h1>
-<h4 class="author">Shashank</h4>
-<h4 class="date">11/06/2021</h4>
+
+<h1 class="title toc-ignore">Analysis of Chicane Results</h1>
+<h4 class="author">Shashank Tiwari</h4>
+<h4 class="date">Updated<br> 2021-06-18</h4>
 
 </div>
 
@@ -280,13 +353,12 @@ $(document).ready(function () {
 <p>Let <span class="math inline">\(Y_{ij}\)</span> represent the count of interactions between a bait <span class="math inline">\(i\)</span> and a fragment <span class="math inline">\(j\)</span>,<span class="math inline">\(d_{ij}\)</span> be the distance between the bait and the otherEnd and <span class="math inline">\(t_{i}\)</span> denote the number of reads linking a bait <span class="math inline">\(i\)</span> with another fragment in trans. <span class="math inline">\(Y_{ij}\)</span> is such that it is assumed to follow a distribution with a mean <span class="math inline">\(\mu_{ij}\)</span> as: <span class="math display">\[ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij}) + \beta_2 \log(t_i+1) \]</span></p>
 <p>For bait to bait interactions, terms are added to the model to adjust for trans counts of the other end, fragment j, and the product of trans counts of both fragments as: <span class="math display">\[ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij}) + \beta_2 \log(t_i+1)  + \beta_3 \log(t_j + 1) + \beta_4 \log(t_i +1) \log(t_j+1)\]</span> Each possible interaction is assaigned an expected <span class="math inline">\(\mu_{ij}\)</span> and a p-value for the observed counts <span class="math inline">\(y_{ij}\)</span> versus what is expected by chance is calculated as: <span class="math display">\[p = P(Y_{ij} \geq y_{ij})\]</span></p>
 </div>
-<div id="score-distribution-for-the-data." class="section level1">
-<h1>Score distribution for the data.</h1>
+<div id="score-distribution-for-our-data." class="section level1">
+<h1>Score distribution for our data.</h1>
 <p>Let us first look at the scores for our data. The threshold value used in the chicane paper is q-value&lt;0.005</p>
 <p><img src="index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
-</div>
-<div id="cis-interactions" class="section level1">
-<h1>Cis-interactions</h1>
+<div id="cis-vs-trans-interactions" class="section level2">
+<h2>Cis vs trans interactions</h2>
 <p>Since majority of interactions detected are trans interactions we would like compare how is the distribution of q.value in both the cases.</p>
 <div class="figure">
 <img src="index_files/figure-html/unnamed-chunk-3-1.png" alt="Distribution of q.value" width="50%" /><img src="index_files/figure-html/unnamed-chunk-3-2.png" alt="Distribution of q.value" width="50%" />
@@ -294,71 +366,200 @@ $(document).ready(function () {
 Distribution of q.value
 </p>
 </div>
-<p>We can sort the significant interactions using a threshold of 0.05</p>
-<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-Here is a table of the highest q-values observed
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["target.id"],"name":[1],"type":["chr"],"align":["left"]},{"label":["bait.id"],"name":[2],"type":["chr"],"align":["left"]},{"label":["target.chr"],"name":[3],"type":["chr"],"align":["left"]},{"label":["target.start"],"name":[4],"type":["int"],"align":["right"]},{"label":["target.end"],"name":[5],"type":["int"],"align":["right"]},{"label":["bait.chr"],"name":[6],"type":["chr"],"align":["left"]},{"label":["bait.start"],"name":[7],"type":["int"],"align":["right"]},{"label":["bait.end"],"name":[8],"type":["int"],"align":["right"]},{"label":["bait.to.bait"],"name":[9],"type":["lgl"],"align":["right"]},{"label":["bait.trans.count"],"name":[10],"type":["int"],"align":["right"]},{"label":["target.trans.count"],"name":[11],"type":["int"],"align":["right"]},{"label":["distance"],"name":[12],"type":["dbl"],"align":["right"]},{"label":["count"],"name":[13],"type":["int"],"align":["right"]},{"label":["expected"],"name":[14],"type":["dbl"],"align":["right"]},{"label":["p.value"],"name":[15],"type":["dbl"],"align":["right"]},{"label":["q.value"],"name":[16],"type":["dbl"],"align":["right"]},{"label":["bait_name"],"name":[17],"type":["chr"],"align":["left"]}],"data":[{"1":"chr11:65497688-65506516","2":"chr10:75431624-76560168","3":"chr11","4":"65497688","5":"65506516","6":"chr10","7":"75431624","8":"76560168","9":"TRUE","10":"15428","11":"1017967","12":"NA","13":"816","14":"15.098128","15":"8.647309e-195","16":"5.660528e-191","17":"LRMDA"},{"1":"chr11:65497688-65506516","2":"chr10:65912523-67696195","3":"chr11","4":"65497688","5":"65506516","6":"chr10","7":"65912523","8":"67696195","9":"TRUE","10":"8445","11":"1017967","12":"NA","13":"602","14":"10.872046","15":"1.471637e-181","16":"5.904207e-178","17":"CTNNA3"},{"1":"chr11:65497688-65506516","2":"chr10:76869601-77638369","3":"chr11","4":"65497688","5":"65506516","6":"chr10","7":"76869601","8":"77638369","9":"TRUE","10":"9987","11":"1017967","12":"NA","13":"611","14":"11.912425","15":"5.955975e-172","16":"2.740344e-168","17":"KCNMA1"},{"1":"chr11:65497688-65506516","2":"chr1:56994778-58546734","3":"chr11","4":"65497688","5":"65506516","6":"chr1","7":"56994778","8":"58546734","9":"TRUE","10":"11447","11":"1017967","12":"NA","13":"636","14":"12.831882","15":"2.084479e-169","16":"1.314056e-165","17":"DAB1"},{"1":"chr11:65497688-65506516","2":"chr1:6785454-7769706","3":"chr11","4":"65497688","5":"65506516","6":"chr1","7":"6785454","8":"7769706","9":"TRUE","10":"9019","11":"1017967","12":"NA","13":"567","14":"11.268684","15":"1.684781e-165","16":"9.003467e-162","17":"CAMTA1"},{"1":"chr11:65497688-65506516","2":"chr10:53802771-55627942","3":"chr11","4":"65497688","5":"65506516","6":"chr10","7":"53802771","8":"55627942","9":"TRUE","10":"7661","11":"1017967","12":"NA","13":"525","14":"10.309893","15":"6.794550e-163","16":"2.537765e-159","17":"PCDH15"},{"1":"chr11:65497688-65506516","2":"chr1:87620803-88685204","3":"chr11","4":"65497688","5":"65506516","6":"chr1","7":"87620803","8":"88685204","9":"TRUE","10":"15801","11":"1017967","12":"NA","13":"689","14":"15.295962","15":"2.541817e-160","16":"2.060651e-156","17":"PKN2-AS1"},{"1":"chr11:65497688-65506516","2":"chr10:50990888-52298423","3":"chr11","4":"65497688","5":"65506516","6":"chr10","7":"50990888","8":"52298423","9":"TRUE","10":"24078","11":"1017967","12":"NA","13":"818","14":"19.242720","15":"2.793842e-159","16":"2.641298e-155","17":"PRKG1"},{"1":"chr6:63719980-65707226","2":"chr6:63635802-63779336","3":"chr6","4":"63719980","5":"65707226","6":"chr6","7":"63635802","8":"63779336","9":"TRUE","10":"4774","11":"12409","12":"1006034","13":"3938","14":"31.612910","15":"2.607435e-151","16":"2.245001e-148","17":"PHF3"},{"1":"chr11:65497688-65506516","2":"chr1:48532854-50023954","3":"chr11","4":"65497688","5":"65506516","6":"chr1","7":"48532854","8":"50023954","9":"TRUE","10":"7066","11":"1017967","12":"NA","13":"476","14":"9.865561","15":"2.618277e-151","16":"1.075850e-147","17":"AGBL4"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
 </div>
-<p>We also look to analyse what is the proportion of bait-to-bait,cis and trans interactions in the significant interactions</p>
-<pre><code>##        trans          cis bait.to.bait 
-##    0.8421752    0.1578248    1.0000000</code></pre>
-<pre><code>##      0-10kbp 10-100kbp 100kbp-1Mbp 1-10Mbp 10-100Mbp 100-1000Mbp
-## [1,]       0       226         670    1207      2901         461</code></pre>
-<div id="distribution-of-number-of-reads-wrt-to-distance-and-score" class="section level2">
-<h2>Distribution of number of reads wrt to distance and score</h2>
-<p>We look at the distribution of read count and scores with the distance of the interaction</p>
+</div>
+<div id="score-distribution-of-example-data" class="section level1">
+<h1>Score distribution of example data</h1>
+<p>This is the output for the example data. <img src="index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre><code>##              used   (Mb) gc trigger    (Mb)   max used    (Mb)
+## Ncells    9654410  515.7   15962222   852.5   11634531   621.4
+## Vcells 1069464766 8159.4 2083153952 15893.3 2083153952 15893.3</code></pre>
 <div class="figure">
-<img src="index_files/figure-html/unnamed-chunk-7-1.png" alt="Distribution of N-reads" width="50%" /><img src="index_files/figure-html/unnamed-chunk-7-2.png" alt="Distribution of N-reads" width="50%" />
-<p class="caption">
-Distribution of N-reads
-</p>
-</div>
-</div>
-</div>
-<div id="score-relationship-with-distance" class="section level1">
-<h1>Score relationship with distance</h1>
-<p>Another plot to compare is the distribution of the q.value with respect to the distance of the interactions.</p>
-<div class="figure">
-<img src="index_files/figure-html/unnamed-chunk-8-1.png" alt="Distribution of q.value" width="50%" /><img src="index_files/figure-html/unnamed-chunk-8-2.png" alt="Distribution of q.value" width="50%" />
+<img src="index_files/figure-html/unnamed-chunk-5-1.png" alt="Distribution of q.value" width="50%" /><img src="index_files/figure-html/unnamed-chunk-5-2.png" alt="Distribution of q.value" width="50%" />
 <p class="caption">
 Distribution of q.value
 </p>
 </div>
 </div>
+<div id="significant-interactions" class="section level1">
+<h1>Significant Interactions</h1>
+<p>We can sort the significant interactions using a threshold of 0.05</p>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-6-1.png" alt="Distribution of q.value with distance" width="50%" /><img src="index_files/figure-html/unnamed-chunk-6-2.png" alt="Distribution of q.value with distance" width="50%" />
+<p class="caption">
+Distribution of q.value with distance
+</p>
+</div>
+<p>Here is a table of the highest q-values observed</p>
+<pre><code>##                   target.id                 bait.id target.chr target.start
+##  1: chr11:65497688-65506516 chr10:75431624-76560168      chr11     65497688
+##  2: chr11:65497688-65506516 chr10:65912523-67696195      chr11     65497688
+##  3: chr11:65497688-65506516 chr10:76869601-77638369      chr11     65497688
+##  4: chr11:65497688-65506516  chr1:56994778-58546734      chr11     65497688
+##  5: chr11:65497688-65506516    chr1:6785454-7769706      chr11     65497688
+##  6: chr11:65497688-65506516 chr10:53802771-55627942      chr11     65497688
+##  7: chr11:65497688-65506516  chr1:87620803-88685204      chr11     65497688
+##  8: chr11:65497688-65506516 chr10:50990888-52298423      chr11     65497688
+##  9:  chr6:63719980-65707226  chr6:63635802-63779336       chr6     63719980
+## 10: chr11:65497688-65506516  chr1:48532854-50023954      chr11     65497688
+##     target.end bait.chr bait.start bait.end bait.to.bait bait.trans.count
+##  1:   65506516    chr10   75431624 76560168         TRUE            15428
+##  2:   65506516    chr10   65912523 67696195         TRUE             8445
+##  3:   65506516    chr10   76869601 77638369         TRUE             9987
+##  4:   65506516     chr1   56994778 58546734         TRUE            11447
+##  5:   65506516     chr1    6785454  7769706         TRUE             9019
+##  6:   65506516    chr10   53802771 55627942         TRUE             7661
+##  7:   65506516     chr1   87620803 88685204         TRUE            15801
+##  8:   65506516    chr10   50990888 52298423         TRUE            24078
+##  9:   65707226     chr6   63635802 63779336         TRUE             4774
+## 10:   65506516     chr1   48532854 50023954         TRUE             7066
+##     target.trans.count distance count  expected       p.value       q.value
+##  1:            1017967       NA   816 15.098128 8.647309e-195 5.660528e-191
+##  2:            1017967       NA   602 10.872046 1.471637e-181 5.904207e-178
+##  3:            1017967       NA   611 11.912425 5.955975e-172 2.740344e-168
+##  4:            1017967       NA   636 12.831882 2.084479e-169 1.314056e-165
+##  5:            1017967       NA   567 11.268684 1.684781e-165 9.003467e-162
+##  6:            1017967       NA   525 10.309893 6.794550e-163 2.537765e-159
+##  7:            1017967       NA   689 15.295962 2.541817e-160 2.060651e-156
+##  8:            1017967       NA   818 19.242720 2.793842e-159 2.641298e-155
+##  9:              12409  1006034  3938 31.612910 2.607435e-151 2.245001e-148
+## 10:            1017967       NA   476  9.865561 2.618277e-151 1.075850e-147
+##     bait_name
+##  1:     LRMDA
+##  2:    CTNNA3
+##  3:    KCNMA1
+##  4:      DAB1
+##  5:    CAMTA1
+##  6:    PCDH15
+##  7:  PKN2-AS1
+##  8:     PRKG1
+##  9:      PHF3
+## 10:     AGBL4</code></pre>
+<p>#Distance Counts</p>
+<p>Another comparison could be done with how are the distances of interaction distributed for our data vs the example data.</p>
+<pre><code>##              used   (Mb) gc trigger    (Mb)   max used    (Mb)
+## Ncells    9694434  517.8   15962222   852.5   11767232   628.5
+## Vcells 1070584630 8168.0 2501371972 19084.0 2500720096 19079.0</code></pre>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-8-1.png" alt="Distribution of distance counts " width="50%" /><img src="index_files/figure-html/unnamed-chunk-8-2.png" alt="Distribution of distance counts " width="50%" />
+<p class="caption">
+Distribution of distance counts
+</p>
+</div>
+<p>Similarly we can compare this for significant interactions. Note that the majority of the interactions however are trans interactions so such a comparison has its limitations.</p>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-9-1.png" alt="Distribution of distance counts " width="50%" /><img src="index_files/figure-html/unnamed-chunk-9-2.png" alt="Distribution of distance counts " width="50%" />
+<p class="caption">
+Distribution of distance counts
+</p>
+</div>
+</div>
+<div id="distribution-of-number-of-counts-wrt-to-distance-and-score" class="section level1">
+<h1>Distribution of number of counts wrt to distance and score</h1>
+<p>We look at the distribution of read count and scores with the distance of the interaction</p>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-10-1.png" alt="Distribution of N-reads" width="50%" /><img src="index_files/figure-html/unnamed-chunk-10-2.png" alt="Distribution of N-reads" width="50%" />
+<p class="caption">
+Distribution of N-reads
+</p>
+</div>
+Similarly for significant interactions
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-11-1.png" alt="Distribution of N-reads" width="50%" /><img src="index_files/figure-html/unnamed-chunk-11-2.png" alt="Distribution of N-reads" width="50%" />
+<p class="caption">
+Distribution of N-reads
+</p>
+</div>
+</div>
 <div id="correlation-plot" class="section level1">
 <h1>Correlation plot</h1>
-<p>We can plot the correlation between the count of each interaction with the <span class="math inline">\(p\)</span>-value. <img src="index_files/figure-html/unnamed-chunk-9-1.png" width="672" /> # Percentage of genome covered The following plot indicates what fraction of reads for each RNA are on its home chromosome.</p>
-<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
-<pre><code>##             used (Mb) gc trigger    (Mb)   max used   (Mb)
-## Ncells  11683777  624   21104631  1127.2   15970598  853.0
-## Vcells 752471854 5741 1327642229 10129.2 1106301858 8440.5</code></pre>
+<p>We can plot the correlation between the count of each interaction with the <span class="math inline">\(p\)</span>-value. <img src="index_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>Splitting this plot for cis and trans interactions</p>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-13-1.png" alt="Cis vs Trans" width="50%" /><img src="index_files/figure-html/unnamed-chunk-13-2.png" alt="Cis vs Trans" width="50%" />
+<p class="caption">
+Cis vs Trans
+</p>
+</div>
+<p>Comparing this with the correlation plot for the example data</p>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-14-1.png" alt="Cis vs Trans" width="50%" /><img src="index_files/figure-html/unnamed-chunk-14-2.png" alt="Cis vs Trans" width="50%" />
+<p class="caption">
+Cis vs Trans
+</p>
+</div>
 <div id="trans-vs-cis-interactions" class="section level2">
 <h2>Trans vs cis interactions</h2>
-<p>It should be noted that majority of the interactions in our data are trans interactions(87.9932091), therefore the distance relation of the score can not be visualized easily here.</p>
+<p>It should be noted that majority of the interactions in our data are trans interactions(88.4178604), therefore the distance relation of the score can not be visualized easily here.</p>
 <p><img src="index_files/figure-html/r-1.png" width="672" /></p>
 </div>
 <div id="comparison-with-previous-plots" class="section level2">
 <h2>Comparison with previous plots</h2>
-<p>Previously we had seen certain plots which stood out when looking at the relationship between the probability of detencting an interaction and the distance.</p>
-<p><img src="index_files/figure-html/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><img src="index_files/figure-html/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
-<div id="we-can-compare-the-plots-for-these-with-plot-of-q.value-vs-distance-for-these-particular-rnas." class="section level3">
-<h3>We can compare the plots for these with plot of q.value vs distance for these particular RNAs.</h3>
-<p><img src="index_files/figure-html/unnamed-chunk-14-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>Previously we had seen certain plots which stood out when looking at the relationship between the probability of detecting an interaction and the distance. We compare these plots with the current q.value distribution.</p>
+<pre><code>##             used   (Mb) gc trigger    (Mb)   max used    (Mb)
+## Ncells   8948467  477.9   15962222   852.5   12639700   675.1
+## Vcells 403258302 3076.7 2934311487 22387.1 3667889358 27983.8</code></pre>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-15-1.png" alt="MALAT1 " width="50%" /><img src="index_files/figure-html/unnamed-chunk-15-2.png" alt="MALAT1 " width="50%" />
+<p class="caption">
+MALAT1
+</p>
 </div>
-<div id="we-can-compare-these-plots-to-the-cases-where-significant-interactions-are-found.-such-as" class="section level3">
-<h3>We can compare these plots to the cases where significant interactions are found. Such as,</h3>
-<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-17-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-18-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-19-1.png" width="672" /> <img src="index_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
-<p><img src="index_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-16-1.png" alt="RNVU1-7 " width="50%" /><img src="index_files/figure-html/unnamed-chunk-16-2.png" alt="RNVU1-7 " width="50%" />
+<p class="caption">
+RNVU1-7
+</p>
+</div>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-17-1.png" alt="RMRP " width="50%" /><img src="index_files/figure-html/unnamed-chunk-17-2.png" alt="RMRP " width="50%" />
+<p class="caption">
+RMRP
+</p>
+</div>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-18-1.png" alt="EBF1 " width="50%" /><img src="index_files/figure-html/unnamed-chunk-18-2.png" alt="EBF1 " width="50%" />
+<p class="caption">
+EBF1
+</p>
+</div>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-19-1.png" alt="TENM4 " width="50%" /><img src="index_files/figure-html/unnamed-chunk-19-2.png" alt="TENM4 " width="50%" />
+<p class="caption">
+TENM4
+</p>
+</div>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-20-1.png" alt="NEAT1 " width="50%" /><img src="index_files/figure-html/unnamed-chunk-20-2.png" alt="NEAT1 " width="50%" />
+<p class="caption">
+NEAT1
+</p>
+</div>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-21-1.png" alt="EHBP1 " width="50%" /><img src="index_files/figure-html/unnamed-chunk-21-2.png" alt="EHBP1 " width="50%" />
+<p class="caption">
+EHBP1
+</p>
+</div>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-22-1.png" alt="PDE3B " width="50%" /><img src="index_files/figure-html/unnamed-chunk-22-2.png" alt="PDE3B " width="50%" />
+<p class="caption">
+PDE3B
+</p>
+</div>
+<div class="figure">
+<img src="index_files/figure-html/unnamed-chunk-23-1.png" alt="DAB1 " width="50%" /><img src="index_files/figure-html/unnamed-chunk-23-2.png" alt="DAB1 " width="50%" />
+<p class="caption">
+DAB1
+</p>
 </div>
 </div>
 </div>
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -390,7 +591,38 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
