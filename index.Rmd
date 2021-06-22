@@ -29,12 +29,12 @@ library(knitr)
 library(png)
 library(gridExtra)
 library(ggplot2)
-library(genomation)
 library(GenomicRanges)
+library(chicane)
 library(data.table)
 library(dplyr)
 library(stringr)
-library(hrbrthemes)
+library(cowplot)
 library(viridis)
 library(slickR)
 library(svglite)
@@ -62,27 +62,45 @@ For bait to bait interactions, terms are added to the model to adjust for trans 
 $$ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij}) + \beta_2 \log(t_i+1)  + \beta_3 \log(t_j + 1) + \beta_4 \log(t_i +1) \log(t_j+1)$$
 Each possible interaction is assaigned an expected $\mu_{ij}$ and a p-value for the observed counts $y_{ij}$ versus what is expected by chance is calculated as:
 $$p = P(Y_{ij} \geq y_{ij})$$
-# Example data
 
-Let us first look at plots from the example dataset provided with the chicane paper.
+
+# Example data
+The example data used here is from the T47D human breast cancer cells. The input files used for the `Chicane` run were the output from the CHi-C libraries generated in the ER+ breast cancer cell line.
+
+Let us first look at plots from the example data set provided with the chicane paper.
 
 ```{r}
 # Read example data file
-ex = fread("/home/master/shared_folder/radicl_seq/Data/Raw/CHiCANE_Supplementary_Data/data/chicane/T47D/interaction_calls.txt.gz",header=TRUE,stringsAsFactors = FALSE,quote = "")
+ex = fread("/home/master/shared_folder/radicl_seq/Data/Raw/CHiCANE_Supplementary_Data/data/chicane/T47D/interaction_calls1.txt.gz",header=TRUE,stringsAsFactors = FALSE,quote = "",select = c("distance","count","p.value","q.value"))
 # Significant interactions
-ex_signif <- ex[ex$`"q.value"`<0.05]
+ex_signif <- ex[ex$q.value<0.05]
+```
+Adjusting for including the correct counts. 
+```{r}
+ex_stretch <- ex[!is.na(q.value),.(count2=1:count),names(ex)]
+
 ```
 
 ## Score distribution of example data
 This is the output for the example data. A threshold of 0.05 is used to determine significant interactions.
 
 ```{r}
-ggplot(ex,aes(ex$`"q.value"`))+
+exp_d = ggplot(ex_stretch,aes(q.value))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
   ggtitle("Score distribution for example data")+
-  theme_ipsum()+
+  theme_cowplot()+
+  xlab("q.value")+
   theme(plot.title = element_text(size = 10))
+plot(exp_d)
 ```
+
+```{r}
+ex_stretch_cis <- ex[!is.na(distance),.(count2=1:count),names(ex)]
+ex_stretch_trans <- ex[is.na(distance),.(count2=1:count),names(ex)]
+
+ex_signif_stretch <- ex_signif[!is.na(distance),.(count2=1:count),names(ex_signif)]
+```
+
 ### Cis vs Trans interactions
 
 ```{r,fig.show="hold",out.width="50%",fig.cap="Distribution of q.value",message=FALSE}
@@ -90,47 +108,28 @@ ggplot(ex,aes(ex$`"q.value"`))+
 par(mar=c(4,4,.1,.1))
 
 
-ggplot(ex[!is.na(ex$`"distance"`)],aes(ex[!is.na(ex$`"distance"`)]$`"q.value"`))+
+exp_cis = ggplot(ex_stretch_cis,aes(q.value))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
   ggtitle("Score distribution for example data(Cis)")+
-  theme_ipsum()+
+  theme_cowplot()+
   theme(plot.title = element_text(size = 10))+
   xlab("q.value")
 
-ggplot(ex[is.na(ex$`"distance"`)],aes(ex[is.na(ex$`"distance"`)]$`"q.value"`))+
+exp_trans = ggplot(ex_stretch_trans,aes(q.value))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
   ggtitle("Score distribution for example data(Trans)")+
-  theme_ipsum()+
+  theme_cowplot()+
   theme(plot.title = element_text(size = 10))+
   xlab("q.value")
+plot(exp_cis)
+plot(exp_trans)
 ```
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 gc()
 ```
 
-## Distance distibution for example data
-We look at the counts of distance for the interactions.
 
-```{r}
-ggplot(ex,aes(ex$`"distance"`))+
-  geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
-  ggtitle("Distribution of distance for example data")+
-  theme_ipsum()+
-  theme(plot.title = element_text(size = 10))+
-  xlab("distance")
-```
-
-### Significant interactions
-Filtering this data for the significant interactions.
-```{r}
-ggplot(ex_signif,aes(ex_signif$`"distance"`))+
-  geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
-  ggtitle("Distribution of distance for example data")+
-  theme_ipsum()+
-  theme(plot.title = element_text(size = 10))+
-  xlab("distance")
-```
 
 ## Correlation plot
 We plot the correlation between the observed p.value and the counts of interaction for example data. Note that the p.value here is unweighted.
@@ -139,40 +138,74 @@ We plot the correlation between the observed p.value and the counts of interacti
 ```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Cis vs Trans"}
 par(mar=c(4,4,.1,.1))
 
-cor_test <- cor.test(ex[is.na(ex$`"distance"`)]$`"count"`,ex[is.na(ex$`"distance"`)]$`"p.value"`,method = "spearman",exact = F)
-plt_text <- paste0('r = ', round(cor_test$estimate,3), ', ',
+cor_test_trans <- cor.test(ex[is.na(ex$distance)]$count,ex[is.na(ex$distance)]$p.value,method = "spearman",exact = F)
+plt_text_trans <- paste0('r = ', round(cor_test_trans$estimate,3), ', ',
                 paste('p-value < 2.2e-16'))#taken from res of cor_test
-setorder(ex[is.na(ex$`"distance"`)],`"distance"`)
-ggplot(data=ex[is.na(ex$`"distance"`)],aes(x = log(`"count"`,base=10), 
-                      y = log(`"p.value"`,base=10),colour=`"distance"`))+ 
+setorder(ex[is.na(ex$distance)],distance)
+p11 = ggplot(data=ex[is.na(ex$distance)],aes(x = log(count,base=10), 
+                      y = log(p.value,base=10),colour=distance))+ 
   geom_point(alpha=0.2,size=0.1) + 
   geom_smooth(method = "lm", se = T,color = 'grey20', alpha = 0.2,size=0.5) +
-  annotate('text', x = -Inf, y = Inf, hjust = -.1, vjust = 1  ,label=plt_text)+
+  annotate('text', x = -Inf, y = Inf, hjust = -.1, vjust = 1  ,label=plt_text_trans)+
   labs(y= "Log 10 P-Value", x = "Log 10 Interaction Counts(Trans)")  +
-  theme_ipsum()+
+  theme_cowplot()+
   ggtitle("Example Data-Trans inetractions")+
   scale_color_viridis()
 
-cor_test <- cor.test(ex[!is.na(ex$`"distance"`)]$`"count"`,ex[!is.na(ex$`"distance"`)]$`"p.value"`,method = "spearman",exact = F)
+cor_test <- cor.test(ex[!is.na(ex$distance)]$count,ex[!is.na(ex$distance)]$p.value,method = "spearman",exact = F)
 plt_text <- paste0('r = ', round(cor_test$estimate,3), ', ',
                 paste('p-value < 2.2e-16'))#taken from res of cor_test
-setorder(ex[!is.na(ex$`"distance"`)],`"distance"`)
-ggplot(ex[!is.na(ex$`"distance"`)] ,aes(x = log(`"count"`,base=10), 
-                      y = log(`"p.value"`,base=10),colour=`"distance"`))+ 
+setorder(ex[!is.na(ex$distance)],distance)
+p12 = ggplot(ex[!is.na(ex$distance)] ,aes(x = log(count,base=10), 
+                      y = log(p.value,base=10),colour=distance))+ 
   geom_point(alpha=0.2,size=0.1) + 
   geom_smooth(method = "lm", se = T,color = 'grey20', alpha = 0.2,size=0.5) +
   annotate('text', x = -Inf, y = Inf, hjust = -.1, vjust = 1  ,label=plt_text)+
   labs(y= "Log 10 P-Value", x = "Log 10 Interaction Counts(Cis)")  +
-  theme_ipsum()+
+  theme_cowplot()+
   ggtitle("Example Data-Cis inetractions")+
   scale_color_viridis()
-
+plot(p11)
+plot(p12)
 ```
+
+## Distance distibution for example data
+We look at the counts of distance for the interactions.
+
+
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 rm(ex)
 gc()
 ```
+
+
+```{r}
+ggplot(ex_stretch_cis,aes(ex_stretch_cis$distance))+
+  geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Distribution of distance for example data")+
+  theme_cowplot()+
+  theme(plot.title = element_text(size = 10))+
+  xlab("distance")
+```
+
+### Significant interactions
+Filtering this data for the significant interactions.
+```{r}
+ggplot(ex_signif_stretch,aes(ex_signif_stretch$distance))+
+  geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Distribution of distance for example data")+
+  theme_cowplot()+
+  theme(plot.title = element_text(size = 10))+
+  xlab("distance")
+```
+
+```{r,echo=FALSE,message=FALSE,results='hide'}
+rm(ex_stretch_cis)
+rm(ex_stretch)
+gc()
+```
+
 
 # Radicl-seq data
 
@@ -189,17 +222,32 @@ baits <- fread("/home/master/shared_folder/radicl_seq/Data/Raw/all_genes_locatio
 colnames(baits) <- c("chr","start","end","bait_name")
 baits$mid <- 0.5*(baits$end-baits$start)
 ibed$bait_name <- baits$bait_name[match(ibed$bait.start,baits$start)]
-
+signif <-ibed[ibed$q.value<0.05,]
+ibed <- ibed[,12:17]
 ```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+gc()
+```
+
+```{r}
+
+ibed_stretch_cis <- ibed[!is.na(distance),.(count2=1:count),names(ibed)]
+ibed_stretch_trans <- ibed[is.na(distance),.(count2=1:count),names(ibed)]
+ibed_stretch <- rbind(ibed_stretch_trans,ibed_stretch_cis)
+
+ibed_signif_stretch <- signif[!is.na(distance),.(count2=1:count),names(signif)]
+```
+
 
 ## Score distribution for radicl-seq.
 
 Let us first look at the scores for radicl-seq.
 ```{r}
-ggplot(ibed,aes(q.value))+
+ggplot(ibed_stretch,aes(q.value))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
   ggtitle("Score distribution for radicl-seq")+
-  theme_ipsum()
+  theme_cowplot()
 ```
 
 ### Cis vs trans interactions
@@ -209,15 +257,15 @@ Since majority of interactions detected are trans interactions we would like com
 ```{r,fig.show="hold",out.width="50%",fig.cap="Distribution of q.value"}
 ##Cis-trans-ex_plot
 par(mar=c(4,4,.1,.1))
-ggplot(ibed[!is.na(ibed$distance)],aes(q.value))+
+ggplot(ibed_stretch_cis,aes(q.value))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
   ggtitle("Score distribution for data(Cis)")+
-  theme_ipsum()
+  theme_cowplot()
 
-ggplot(ibed[is.na(ibed$distance)],aes(q.value))+
+ggplot(ibed_stretch_trans,aes(q.value))+
   geom_histogram(fill="#69b3a2", color="#e9ecef", alpha=0.8)+
   ggtitle("Score distribution for data(Trans)")+
-  theme_ipsum()
+  theme_cowplot()
 ```
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
@@ -227,10 +275,10 @@ gc()
 ## Distance distribution
 
 ```{r}
-ggplot(ibed,aes(distance))+
+ggplot(ibed_stretch_cis,aes(distance))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
   ggtitle("Distribution of distance for radicl-seq")+
-  theme_ipsum()+
+  theme_cowplot()+
   theme(plot.title = element_text(size = 10))
 ```
 
@@ -238,12 +286,10 @@ ggplot(ibed,aes(distance))+
 Filtering this data for the significant interactions.
 ```{r}
 
-signif <-ibed[ibed$q.value<0.05,]
-
-ggplot(signif,aes(distance))+
+ggplot(ibed_signif_stretch,aes(distance))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
   ggtitle("Distribution of distance for radicl-seq")+
-  theme_ipsum()+
+  theme_cowplot()+
   theme(plot.title = element_text(size = 10))
 ```
 
@@ -256,17 +302,17 @@ Next we look at the distribution of the q,value with the distance and the counts
 
 p1 = ggplot(signif %>% arrange(count),aes(x=distance,y=log(q.value,base=10),color=log(count,base=10)))+
       geom_point(size=0.5,alpha=0.5)+
-      theme_ipsum()+
+      theme_cowplot()+
       scale_color_gradient(high="red",low="#69b3a2",name="log.count")+
     xlab("distance")+
   ylab("log.q.value")+
   ggtitle("q.value distribution of significant interactions for radicl-seq")+
   theme(plot.title = element_text(size = 10))
 
-p2 = ggplot(ex_signif %>% arrange(`"count"`),aes(x=ex_signif$`"distance"` ,y=log(ex_signif$`"q.value"`,base=10),color=log(ex_signif$`"count"`,base=10)))+
+p2 = ggplot(ex_signif %>% arrange(count),aes(x=ex_signif$distance ,y=log(ex_signif$q.value,base=10),color=log(ex_signif$count,base=10)))+
     scale_color_gradient(high="red",low="#69b3a2",name="log.count")+
    geom_point(size=0.5,alpha=0.5)+
-    theme_ipsum()+
+    theme_cowplot()+
   xlab("distance")+
   ylab("log.q.value")+
   ggtitle("q.value distribution of significant interactions for example data")+
@@ -281,22 +327,13 @@ slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
 gc()
 ```
 
-Here is a table of the highest q-values observed
-```{r}
-signif <- signif[with(signif,order(q.value)),]
-top  <- signif[1:10,]
-print(top)
-```
 
 
 
-```{r,echo=FALSE,message=FALSE,results='hide'}
-gc()
-```
 
 
 
-## Correlation plot
+# Correlation plot
 
 We can plot the correlation between the count of each interaction with the $p$-value. 
 
@@ -313,9 +350,13 @@ ggplot(data=ibed,aes(x = log(count,base=10),
   geom_smooth(method = "lm", se = T,color = 'grey20', alpha = 0.2,size=0.5) +
   annotate('text', x = -Inf, y = Inf, hjust = -.1, vjust = 1  ,label=plt_text)+
   labs(y= "Log 10 P-Value", x = "Log 10 Interaction Counts")  +
-  theme_ipsum()+
+  theme_cowplot()+
   scale_color_viridis()
 ```
+This is how it looks when compared to the example dataset.
+
+
+
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 gc()
@@ -335,7 +376,7 @@ ggplot(data=ibed[is.na(ibed$distance)],aes(x = log(count,base=10),
   geom_smooth(method = "lm", se = T,color = 'grey20', alpha = 0.2,size=0.5) +
   annotate('text', x = -Inf, y = Inf, hjust = -.1, vjust = 1  ,label=plt_text)+
   labs(y= "Log 10 P-Value", x = "Log 10 Interaction Counts(Trans)")  +
-  theme_ipsum()+
+  theme_cowplot()+
   ggtitle("Trans inetractions")+
   scale_color_viridis()
 
@@ -349,7 +390,7 @@ ggplot(ibed[!is.na(ibed$distance)] %>% arrange(distance),aes(x = log(count,base=
   geom_smooth(method = "lm", se = T,color = 'grey20', alpha = 0.2,size=0.5) +
   annotate('text', x = -Inf, y = Inf, hjust = -.1, vjust = 1  ,label=plt_text)+
   labs(y= "Log 10 P-Value", x = "Log 10 Interaction Counts(Cis)")  +
-  theme_ipsum()+
+  theme_cowplot()+
   ggtitle("Cis inetractions")+
   scale_color_viridis()
 ```
@@ -358,8 +399,16 @@ ggplot(ibed[!is.na(ibed$distance)] %>% arrange(distance),aes(x = log(count,base=
 gc()
 ```
 
+```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Example"}
+par(mar=c(4,4,.1,.1))
+plot(p11)
+plot(p12)
+```
 
 
+```{r,echo=FALSE,message=FALSE,results='hide'}
+gc()
+```
 
 
 ## q.value vs count
@@ -370,7 +419,7 @@ It should be noted that majority of the interactions in radicl-seq are trans int
 ```{r ,message=FALSE, warning=FALSE, r, }
 ggplot(ibed[is.na(ibed$distance)],aes(count,log(q.value,base=10)))+
   geom_point(color="#69b3a2",size=0.5,alpha=0.3)+
-  theme_ipsum()+
+  theme_cowplot()+
   ggtitle("Count distribution of trans interaction")
 ```
 
@@ -383,13 +432,7 @@ Previously we had seen certain plots which stood out when looking at the relatio
 ```{r}
 #MALAT1
 
-# read radicl-seq data bedpe file
-yyy = fread("/home/master/shared_folder/radicl_seq/Data/Raw/Day13_done.bedpe",header=FALSE,stringsAsFactors = FALSE,quote = "")
-colnames(yyy) <- c('rnachrom','rnachromStart','rnachromEnd','dnachrom','dnachromStart','dnachromEnd','rnaID')
-yyy$bait_mid <- baits$mid[match(yyy$rnaID,baits$bait_name)]
-yyy$len <- abs((yyy$dnachromStart+yyy$dnachromEnd)/2-yyy$bait_mid)
-yyy$len <- ifelse(yyy$rnachrom==yyy$dnachrom,yyy$len,NA)
-
+ibed <- ibed[!is.na(distance)]
 MALAT1 <- ibed[ibed$bait_name=="MALAT1"]
 q.count <- quantile(MALAT1$count,c(0.30,0.60,0.90,0.95))
 MALAT1$q.count <- with(MALAT1,ifelse(count<q.count[1],0,
@@ -398,20 +441,20 @@ MALAT1$q.count <- with(MALAT1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[4],3,4)))))
 
 #dist_malat
-p1 = ggplot(yyy[yyy$rnaID=="MALAT1"],aes(x = len))+
+p1 = ggplot(MALAT1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
   ggtitle("MALAT1")+
   xlab("Distance of interaction")+
   ylab("Probability")+
-  theme_ipsum()
+  theme_cowplot()
 setorder(MALAT1,q.count)
 p2 = ggplot(MALAT1 ,aes(x=distance,y=log(q.value,base=10)))+
     geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
     scale_colour_manual(name="percentile of counts",
                     values=c("#69b3a2","black","darkgoldenrod4","coral1","red"),labels=c("0-30","30-60","60-90","90-95","95-100"))+
     ggtitle("MALAT1")+
-    theme_ipsum()+
+    theme_cowplot()+
     ylab("log(q.value)")
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
@@ -431,20 +474,20 @@ RNVU1$q.count <- with(RNVU1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[4],3,4)))))
 
 
-p1 = ggplot(yyy[yyy$rnaID=="RNVU1-7"],aes(x = len))+
+p1 = ggplot(RNVU1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
   ggtitle("RNVU1-7")+
   xlab("Distance of interaction")+
   ylab("Probability")+
-  theme_ipsum()
+  theme_cowplot()
 setorder(RNVU1,q.count)
 p2 = ggplot(RNVU1 ,aes(x=distance,y=log(q.value,base=10)))+
     geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
     scale_colour_manual(name="percentile of counts",
                     values=c("#69b3a2","red"),labels=c("60-90","95-100"))+
     ggtitle("RNVU1-7")+
-    theme_ipsum()+
+    theme_cowplot()+
     ylab("log(q.value)")
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
@@ -465,20 +508,20 @@ RMRP$q.count <- with(RMRP,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[4],3,4)))))
 
 #dist_malat
-p1 = ggplot(yyy[yyy$rnaID=="RMRP"],aes(x = len))+
+p1 = ggplot(RMRP,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
   ggtitle("RMRP")+
   xlab("Distance of interaction")+
   ylab("Probability")+
-  theme_ipsum()
+  theme_cowplot()
 setorder(RMRP,q.count)
 p2 = ggplot(RMRP,aes(x=distance,y=log(q.value,base=10)))+
     geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
     scale_colour_manual(name="percentile of counts",
                     values=c("darkgoldenrod4","coral1","red"),labels=c("60-90","90-95","95-100"))+
     ggtitle("RMRP")+
-    theme_ipsum()+
+    theme_cowplot()+
     ylab("log(q.value)")
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
@@ -497,21 +540,21 @@ EBF1$q.count <- with(EBF1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[4],3,4)))))
 
 #dist_malat
-p1 = ggplot(yyy[yyy$rnaID=="EBF1"],aes(x = len))+
+p1 =ggplot(EBF1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
   ggtitle("EBF1")+
   xlab("Distance of interaction")+
   ylab("Probability")+
-  theme_ipsum()
+  theme_cowplot()
 
 setorder(EBF1,q.count)
 p2 = ggplot(EBF1,aes(x=distance,y=log(q.value,base=10)))+
     geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
     scale_colour_manual(name="percentile of counts",
-                    values=c("black","darkgoldenrod4","coral1","red"),labels=c("30-60","60-90","90-95","95-100"))+ 
+                    values=c("#69b3a2","black","darkgoldenrod4","coral1","red"),labels=c("0-30","30-60","60-90","90-95","95-100"))+ 
     ggtitle("EBF1")+
-    theme_ipsum()+
+    theme_cowplot()+
     ylab("log(q.value)")
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
@@ -530,21 +573,21 @@ TENM4$q.count <- with(TENM4,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[4],3,4)))))
 
 #dist_malat
-p1 = ggplot(yyy[yyy$rnaID=="TENM4"],aes(x = len))+
+p1 = ggplot(TENM4,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
   ggtitle("TENM4")+
   xlab("Distance of interaction")+
   ylab("Probability")+
-  theme_ipsum()
+  theme_cowplot()
 
 setorder(TENM4,q.count)
 p2 = ggplot(TENM4,aes(x=distance,y=log(q.value,base=10)))+
     geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
     scale_colour_manual(name="percentile of counts",
-                    values=c("black","darkgoldenrod4","coral1","red"),labels=c("30-60","60-90","90-95","95-100"))+ 
+                    values=c("#69b3a2","black","darkgoldenrod4","coral1","red"),labels=c("0-30","30-60","60-90","90-95","95-100"))+
     ggtitle("TENM4")+
-    theme_ipsum()+
+    theme_cowplot()+
     ylab("log(q.value)")
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
@@ -564,13 +607,13 @@ NEAT1$q.count <- with(NEAT1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[4],3,4)))))
 
 #dist_malat
-p1 = ggplot(yyy[yyy$rnaID=="NEAT1"],aes(x = len))+
+p1 = ggplot(NEAT1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
   ggtitle("NEAT1")+
   xlab("Distance of interaction")+
   ylab("Probability")+
-  theme_ipsum()
+  theme_cowplot()
 
 setorder(NEAT1,q.count)
 p2 = ggplot(NEAT1,aes(x=distance,y=log(q.value,base=10)))+
@@ -578,7 +621,7 @@ p2 = ggplot(NEAT1,aes(x=distance,y=log(q.value,base=10)))+
     scale_colour_manual(name="percentile of counts",
                     values=c("#69b3a2","black","darkgoldenrod4","coral1","red"),labels=c("0-30","30-60","60-90","90-95","95-100"))+ 
     ggtitle("NEAT1")+
-    theme_ipsum()+
+    theme_cowplot()+
     ylab("log(q.value)")
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
@@ -598,21 +641,21 @@ EHBP1$q.count <- with(EHBP1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[4],3,4)))))
 
 #dist_malat
-p1 = ggplot(yyy[yyy$rnaID=="EHBP1"],aes(x = len))+
+p1 = ggplot(EHBP1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
   ggtitle("EHBP1")+
   xlab("Distance of interaction")+
   ylab("Probability")+
-  theme_ipsum()
+  theme_cowplot()
 
 setorder(EHBP1,q.count)
 p2 = ggplot(EHBP1,aes(x=distance,y=log(q.value,base=10)))+
     geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
     scale_colour_manual(name="percentile of counts",
-                    values=c("black","darkgoldenrod4","coral1","red"),labels=c("30-60","60-90","90-95","95-100"))+ 
+                    values=c("#69b3a2","black","darkgoldenrod4","coral1","red"),labels=c("0-30","30-60","60-90","90-95","95-100"))+
     ggtitle("EHBP1")+
-    theme_ipsum()+
+    theme_cowplot()+
     ylab("log(q.value)")
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
@@ -632,13 +675,13 @@ PDE3B$q.count <- with(PDE3B,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[4],3,4)))))
 
 #dist_malat
-p1 = ggplot(yyy[yyy$rnaID=="PDE3B"],aes(x = len))+
+p1 = ggplot(PDE3B,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
   ggtitle("PDE3B")+
   xlab("Distance of interaction")+
   ylab("Probability")+
-  theme_ipsum()
+  theme_cowplot()
 
 setorder(PDE3B,q.count)
 p2 =ggplot(PDE3B,aes(x=distance,y=log(q.value,base=10)))+
@@ -646,7 +689,7 @@ p2 =ggplot(PDE3B,aes(x=distance,y=log(q.value,base=10)))+
     scale_colour_manual(name="percentile of counts",
                     values=c("black","darkgoldenrod4","green","red"),labels=c("30-60","60-90","90-95","95-100"))+ 
     ggtitle("PDE3B")+
-    theme_ipsum()+
+    theme_cowplot()+
     ylab("log(q.value)")
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
@@ -666,21 +709,21 @@ DAB1$q.count <- with(DAB1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[4],3,4)))))
 
 #dist_malat
-p1 = ggplot(yyy[yyy$rnaID=="DAB1"],aes(x = len))+
+p1 = ggplot(DAB1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
   ggtitle("DAB1")+
   xlab("Distance of interaction")+
   ylab("Probability")+
-  theme_ipsum()
+  theme_cowplot()
 
 setorder(DAB1,q.count)
 p2 = ggplot(DAB1,aes(x=distance,y=log(q.value,base=10)))+
     geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
     scale_colour_manual(name="percentile of counts",
-                    values=c("darkgoldenrod4","green","red"),labels=c("60-90","90-95","95-100"))+ 
+                    values=c("black","darkgoldenrod4","coral1","red"),labels=c("30-60","60-90","90-95","95-100"))+
     ggtitle("DAB1")+
-    theme_ipsum()+
+    theme_cowplot()+
     ylab("log(q.value)")
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
