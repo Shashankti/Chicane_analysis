@@ -23,7 +23,8 @@ knitr::opts_chunk$set(
   fig.height = 6,
   fig.width = 7.00787 #178mm
 )  
-knitr::opts_chunk$set(warning = FALSE)  
+knitr::opts_chunk$set(warning = FALSE) 
+options(knitr.duplicate.label = "allow")
 #Input
 library(knitr)
 library(png)
@@ -81,6 +82,13 @@ ex_stretch <- ex[!is.na(q.value),.(count2=1:count),names(ex)]
 
 ```
 
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+p34 = ggplot(ex[is.na(ex$distance)],aes(count,log(q.value,base=10)))+
+  geom_point(color="#69b3a2",size=0.5,alpha=0.3)+
+  theme_cowplot()+
+  ggtitle("Count distribution of trans interaction for example data ")
+```
+
 ## Score distribution of example data
 This is the output for the example data. A threshold of 0.05 is used to determine significant interactions.
 
@@ -135,7 +143,7 @@ gc()
 We plot the correlation between the observed p.value and the counts of interaction for example data. Note that the p.value here is unweighted.
 
 
-```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Cis vs Trans"}
+```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Cis vs Trans",eval=FALSE}
 par(mar=c(4,4,.1,.1))
 
 cor_test_trans <- cor.test(ex[is.na(ex$distance)]$count,ex[is.na(ex$distance)]$p.value,method = "spearman",exact = F)
@@ -167,6 +175,15 @@ p12 = ggplot(ex[!is.na(ex$distance)] ,aes(x = log(count,base=10),
   scale_color_viridis()
 plot(p11)
 plot(p12)
+```
+
+```{r,echo=FALSE}
+par(mar=c(4,4,.1,.1))
+img1_path <- "trans-ex.png"
+img2_path <- "cis-ex.png"
+include_graphics(img1_path)
+include_graphics(img2_path)
+
 ```
 
 ## Distance distibution for example data
@@ -223,12 +240,27 @@ colnames(baits) <- c("chr","start","end","bait_name")
 baits$mid <- 0.5*(baits$end-baits$start)
 ibed$bait_name <- baits$bait_name[match(ibed$bait.start,baits$start)]
 signif <-ibed[ibed$q.value<0.05,]
+cis_signif <- signif[!is.na(signif$distance)]
 ibed <- ibed[,12:17]
+q.count <- quantile(cis_signif$count,c(0.30,0.60,0.90,0.99))
+cis_signif$q.count <- with(cis_signif,ifelse(count<q.count[1],0,
+                                 ifelse(count<q.count[2],1,
+                                  ifelse(count<q.count[3],2,
+                                  ifelse(count<q.count[4],3,4)))))
+cis_signif_wo <- cis_signif[!cis_signif$bait_name=="MALAT1"]
+cis_signif_wo <- cis_signif_wo[!cis_signif_wo$bait_name=="NEAT1"]
+q.count <- quantile(cis_signif_wo$count,c(0.30,0.60,0.90,0.99))
+cis_signif_wo$q.count <- with(cis_signif_wo,ifelse(count<q.count[1],0,
+                                 ifelse(count<q.count[2],1,
+                                  ifelse(count<q.count[3],2,
+                                  ifelse(count<q.count[4],3,4)))))
 ```
+
 
 ```{r,echo=FALSE,warning=FALSE,message=FALSE}
 gc()
 ```
+
 
 ```{r}
 
@@ -249,6 +281,23 @@ ggplot(ibed_stretch,aes(q.value))+
   ggtitle("Score distribution for radicl-seq")+
   theme_cowplot()
 ```
+### Without MALAT1 and NEAT1
+
+`r 100*length(ibed_stretch[ibed_stretch$bait_name=="MALAT1" | ibed_stretch$bait_name=="NEAT1"]$distance)/length(ibed_stretch$distance)` % of interactions observed are from MALAT1 and NEAT1. We remove those interactions from the data set and compare the results 
+
+```{r}
+without_ibed <- ibed_stretch[!ibed_stretch$bait_name=="MALAT1"]
+without_ibed <- without_ibed[!without_ibed$bait_name=="NEAT1"]
+
+
+wo_mn <- ibed[!ibed$bait_name=="MALAT1"]
+wo_mn <- wo_mn[!wo_mn$bait_name=="NEAT1"]
+ggplot(without_ibed,aes(q.value))+
+  geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Score distribution without MALAT1 and NEAT1")+
+  theme_cowplot()
+```
+
 
 ### Cis vs trans interactions
 
@@ -272,6 +321,21 @@ ggplot(ibed_stretch_trans,aes(q.value))+
 gc()
 ```
 
+### Without MALAT1 and NEAT1
+```{r,fig.show="hold",out.width="50%",fig.cap="Distribution of q.value"}
+##Cis-trans-ex_plot
+par(mar=c(4,4,.1,.1))
+ggplot(without_ibed[!is.na(without_ibed$distance)],aes(q.value))+
+  geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Score distribution for data(Cis)")+
+  theme_cowplot()
+
+ggplot(without_ibed[is.na(without_ibed$distance)],aes(q.value))+
+  geom_histogram(fill="#69b3a2", color="#e9ecef", alpha=0.8)+
+  ggtitle("Score distribution for data(Trans)")+
+  theme_cowplot()
+```
+
 ## Distance distribution
 
 ```{r}
@@ -282,8 +346,23 @@ ggplot(ibed_stretch_cis,aes(distance))+
   theme(plot.title = element_text(size = 10))
 ```
 
+### Without MALAT1 and NEAT1
+```{r}
+ggplot(without_ibed,aes(distance))+
+  geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Distribution of distance without MALAT1 and NEAT1")+
+  theme_cowplot()+
+  theme(plot.title = element_text(size = 10))
+```
+
 ### Significant interactions
+
+A total of `34627` interactions are significant. This accounts for `0.2954271 %` of all interactions. However when we take into account the number of counts from each interaction as well, a total of `3.567306%` interactions are significant.
+
+Out of these significant interactions MALAT1 and NEAT1 account for `r length(ibed_signif_stretch[ibed_signif_stretch$bait_name=="MALAT1"|ibed_signif_stretch$bait_name=="NEAT1"]$target.id)/length(ibed_signif_stretch$distance)*100` 
 Filtering this data for the significant interactions.
+
+
 ```{r}
 
 ggplot(ibed_signif_stretch,aes(distance))+
@@ -293,23 +372,44 @@ ggplot(ibed_signif_stretch,aes(distance))+
   theme(plot.title = element_text(size = 10))
 ```
 
+
+### Without MALAT1 and NEAT1
+
+ 
+```{r}
+ggplot(without_ibed[without_ibed$q.value<0.05],aes(distance))+
+  geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Distribution of distance without MALAT1 and NEAT1")+
+  theme_cowplot()+
+  theme(plot.title = element_text(size = 10))
+```
 ## Distance relation of q.value
 
 Next we look at the distribution of the q,value with the distance and the counts.
 
 ```{r}
-
-
-p1 = ggplot(signif %>% arrange(count),aes(x=distance,y=log(q.value,base=10),color=log(count,base=10)))+
-      geom_point(size=0.5,alpha=0.5)+
-      theme_cowplot()+
-      scale_color_gradient(high="red",low="#69b3a2",name="log.count")+
+p1 = ggplot(cis_signif %>% arrange(q.count),aes(x=distance,y=log(q.value,base=10)))+
+  geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
+    scale_colour_manual(name="percentile of counts",
+                    values=c("#69b3a2","black","darkgoldenrod4","coral1","red"),labels=c("0-30","30-60","60-90","90-95","95-100"))+
     xlab("distance")+
   ylab("log.q.value")+
-  ggtitle("q.value distribution of significant interactions for radicl-seq")+
+  theme_cowplot()+
+  ggtitle("q.value distribution of significant interactions")+
   theme(plot.title = element_text(size = 10))
 
-p2 = ggplot(ex_signif %>% arrange(count),aes(x=ex_signif$distance ,y=log(ex_signif$q.value,base=10),color=log(ex_signif$count,base=10)))+
+
+p2 = ggplot(cis_signif_wo %>% arrange(q.count),aes(x=distance,y=log(q.value,base=10)))+
+  geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
+    scale_colour_manual(name="percentile of counts",
+                    values=c("#69b3a2","red"),labels=c("0-30","99-100"))+
+    xlab("distance")+
+  ylab("log.q.value")+
+  theme_cowplot()+
+  ggtitle("q.value distribution of significant interactions without MALAT1 and NEAT1")+
+  theme(plot.title = element_text(size = 10))
+
+p3 = ggplot(ex_signif %>% arrange(count),aes(x=ex_signif$distance ,y=log(ex_signif$q.value,base=10),color=log(ex_signif$count,base=10)))+
     scale_color_gradient(high="red",low="#69b3a2",name="log.count")+
    geom_point(size=0.5,alpha=0.5)+
     theme_cowplot()+
@@ -319,13 +419,19 @@ p2 = ggplot(ex_signif %>% arrange(count),aes(x=ex_signif$distance ,y=log(ex_sign
   theme(plot.title = element_text(size = 10))
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
-p2 = xmlSVG({show(p2)}, standalone = TRUE)  
-slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
+p2 = xmlSVG({show(p2)}, standalone = TRUE)
+p3 = xmlSVG({show(p3)}, standalone = TRUE)
+
+
+slickR(list(p1, p2,p3)) + settings(dots = TRUE, autoplay = TRUE)
 ```
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
+rm(ibed_stretch_cis)
+rm(ibed_stretch_trans)
 gc()
 ```
+
 
 
 
@@ -335,36 +441,13 @@ gc()
 
 # Correlation plot
 
-We can plot the correlation between the count of each interaction with the $p$-value. 
-
-
-```{r,message=FALSE}
-
-cor_test <- cor.test(ibed$count,ibed$p.value,method = "spearman",exact = F)
-plt_text <- paste0('r = ', round(cor_test$estimate,3), ', ',
-                paste('p-value < 2.2e-16'))#taken from res of cor_test
-setorder(ibed,distance)
-ggplot(data=ibed,aes(x = log(count,base=10), 
-                      y = log(p.value,base=10),colour=distance))+ 
-  geom_point(alpha=0.2,size=0.1) + 
-  geom_smooth(method = "lm", se = T,color = 'grey20', alpha = 0.2,size=0.5) +
-  annotate('text', x = -Inf, y = Inf, hjust = -.1, vjust = 1  ,label=plt_text)+
-  labs(y= "Log 10 P-Value", x = "Log 10 Interaction Counts")  +
-  theme_cowplot()+
-  scale_color_viridis()
-```
-This is how it looks when compared to the example dataset.
-
-
-
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 gc()
 ```
 
-Splitting this plot for cis and trans interactions
 
-```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Cis vs Trans"}
+```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Cis vs Trans",eval=FALSE}
 par(mar=c(4,4,.1,.1))
 cor_test <- cor.test(ibed[is.na(ibed$distance)]$count,ibed[is.na(ibed$distance)]$p.value,method = "spearman",exact = F)
 plt_text <- paste0('r = ', round(cor_test$estimate,3), ', ',
@@ -395,32 +478,85 @@ ggplot(ibed[!is.na(ibed$distance)] %>% arrange(distance),aes(x = log(count,base=
   scale_color_viridis()
 ```
 
-```{r,echo=FALSE,message=FALSE,results='hide'}
-gc()
-```
-
-```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Example"}
+```{r,echo=FALSE}
 par(mar=c(4,4,.1,.1))
-plot(p11)
-plot(p12)
-```
+img3_path <- "radicl-cis.png"
+img4_path <- "radicl-trans.png"
+include_graphics(img3_path)
+include_graphics(img4_path)
 
+```
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 gc()
 ```
+## Without MALAT1 and NEAT1
+```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Cis vs Trans"}
+par(mar=c(4,4,.1,.1))
+
+cor_test <- cor.test(wo_mn[is.na(wo_mn$distance)]$count,wo_mn[is.na(wo_mn$distance)]$p.value,method = "spearman",exact = F)
+plt_text <- paste0('r = ', round(cor_test$estimate,3), ', ',
+                paste('p-value < 2.2e-16'))#taken from res of cor_test
+setorder(wo_mn[is.na(wo_mn$distance)],distance)
+ggplot(data=wo_mn[is.na(wo_mn$distance)],aes(x = log(count,base=10), 
+                      y = log(p.value,base=10),colour=distance))+ 
+  geom_point(alpha=0.2,size=0.1) + 
+  geom_smooth(method = "lm", se = T,color = 'grey20', alpha = 0.2,size=0.5) +
+  annotate('text', x = -Inf, y = Inf, hjust = -.1, vjust = 1  ,label=plt_text)+
+  labs(y= "Log 10 P-Value", x = "Log 10 Interaction Counts(Trans)")  +
+  theme_cowplot()+
+  ggtitle("Trans inetractions without MALAT1 and NEAT1")+
+  scale_color_viridis()
+
+cor_test <- cor.test(wo_mn[!is.na(wo_mn$distance)]$count,wo_mn[!is.na(wo_mn$distance)]$p.value,method = "spearman",exact = F)
+plt_text <- paste0('r = ', round(cor_test$estimate,3), ', ',
+                paste('p-value < 2.2e-16'))#taken from res of cor_test
+setorder(wo_mn[!is.na(wo_mn$distance)],distance)
+ggplot(wo_mn[!is.na(wo_mn$distance)] %>% arrange(distance),aes(x = log(count,base=10), 
+                      y = log(p.value,base=10),colour=distance))+ 
+  geom_point(alpha=0.2,size=0.1) + 
+  geom_smooth(method = "lm", se = T,color = 'grey20', alpha = 0.2,size=0.5) +
+  annotate('text', x = -Inf, y = Inf, hjust = -.1, vjust = 1  ,label=plt_text)+
+  labs(y= "Log 10 P-Value", x = "Log 10 Interaction Counts(Cis)")  +
+  theme_cowplot()+
+  ggtitle("Cis inetractions")+
+  scale_color_viridis()
+```
 
 
-## q.value vs count
+```{r,echo=FALSE}
+par(mar=c(4,4,.1,.1))
+img1_path <- "trans-ex.png"
+img2_path <- "cis-ex.png"
+include_graphics(img1_path)
+include_graphics(img2_path)
 
-It should be noted that majority of the interactions in radicl-seq are trans interactions(`r length(which(is.na(ibed$distance)))*100/length(ibed$bait.id)`), therefore the distance relation of the score can not be visualized easily here. 
+```
 
 
-```{r ,message=FALSE, warning=FALSE, r, }
-ggplot(ibed[is.na(ibed$distance)],aes(count,log(q.value,base=10)))+
+```{r,echo=FALSE,message=FALSE,results='hide'}
+rm(without_ibed)
+rm(exp_d)
+rm(p1)
+rm(p2)
+gc()
+```
+
+
+
+### Without MALAT1 and NEAT1
+
+```{r,message=FALSE,warning=FALSE}
+#malat1 neat1
+ggplot(ibed[is.na(ibed$distance)|!ibed$bait_name=="MALAT1"|!ibed$baitname=="NEAT1"],aes(count,log(q.value,base=10)))+
   geom_point(color="#69b3a2",size=0.5,alpha=0.3)+
   theme_cowplot()+
-  ggtitle("Count distribution of trans interaction")
+  ggtitle("Count distribution of trans interaction without MALAT1 and NEAT1")
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,results='hide'}
+rm(p34)
+gc()
 ```
 
 # Comparison with previous plots
@@ -440,7 +576,7 @@ MALAT1$q.count <- with(MALAT1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[3],2,
                                   ifelse(count<q.count[4],3,4)))))
 
-#dist_malat
+#dist
 p1 = ggplot(MALAT1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
@@ -507,7 +643,7 @@ RMRP$q.count <- with(RMRP,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[3],2,
                                   ifelse(count<q.count[4],3,4)))))
 
-#dist_malat
+#dist
 p1 = ggplot(RMRP,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
@@ -539,7 +675,7 @@ EBF1$q.count <- with(EBF1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[3],2,
                                   ifelse(count<q.count[4],3,4)))))
 
-#dist_malat
+#dist
 p1 =ggplot(EBF1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
@@ -572,7 +708,7 @@ TENM4$q.count <- with(TENM4,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[3],2,
                                   ifelse(count<q.count[4],3,4)))))
 
-#dist_malat
+#dist
 p1 = ggplot(TENM4,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
@@ -606,7 +742,7 @@ NEAT1$q.count <- with(NEAT1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[3],2,
                                   ifelse(count<q.count[4],3,4)))))
 
-#dist_malat
+#dist
 p1 = ggplot(NEAT1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
@@ -640,7 +776,7 @@ EHBP1$q.count <- with(EHBP1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[3],2,
                                   ifelse(count<q.count[4],3,4)))))
 
-#dist_malat
+#dist
 p1 = ggplot(EHBP1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
@@ -674,7 +810,7 @@ PDE3B$q.count <- with(PDE3B,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[3],2,
                                   ifelse(count<q.count[4],3,4)))))
 
-#dist_malat
+#dist
 p1 = ggplot(PDE3B,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
@@ -708,7 +844,7 @@ DAB1$q.count <- with(DAB1,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[3],2,
                                   ifelse(count<q.count[4],3,4)))))
 
-#dist_malat
+#dist
 p1 = ggplot(DAB1,aes(distance))+
   geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
   scale_y_continuous(labels = scales::percent)+
