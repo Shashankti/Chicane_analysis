@@ -39,6 +39,8 @@ library(cowplot)
 library(viridis)
 library(slickR)
 library(svglite)
+library(patchwork)
+library(magick)
 ```
 
 
@@ -86,7 +88,8 @@ ex_stretch <- ex[!is.na(q.value),.(count2=1:count),names(ex)]
 p34 = ggplot(ex[is.na(ex$distance)],aes(count,log(q.value,base=10)))+
   geom_point(color="#69b3a2",size=0.5,alpha=0.3)+
   theme_cowplot()+
-  ggtitle("Count distribution of trans interaction for example data ")
+  ggtitle("Count distribution of trans interaction for example data ")+
+  theme(plot.title = element_text(size = 10))
 ```
 
 ## Score distribution of example data
@@ -178,13 +181,12 @@ plot(p12)
 ```
 
 ```{r,echo=FALSE}
-par(mar=c(4,4,.1,.1))
-img1_path <- "trans-ex.png"
-img2_path <- "cis-ex.png"
-include_graphics(img1_path)
-include_graphics(img2_path)
-
+p1 <- ggdraw()+draw_image("trans-ex.png")
+p2 <- ggdraw()+draw_image("cis-ex.png")
+(p1 | p2)
 ```
+
+
 
 ## Distance distibution for example data
 We look at the counts of distance for the interactions.
@@ -478,7 +480,7 @@ ggplot(ibed[!is.na(ibed$distance)] %>% arrange(distance),aes(x = log(count,base=
   scale_color_viridis()
 ```
 
-```{r,echo=FALSE}
+```{r,echo=FALSE,fig.show="hold",out.width="50%"}
 par(mar=c(4,4,.1,.1))
 img3_path <- "radicl-cis.png"
 img4_path <- "radicl-trans.png"
@@ -524,7 +526,7 @@ ggplot(wo_mn[!is.na(wo_mn$distance)] %>% arrange(distance),aes(x = log(count,bas
 ```
 
 
-```{r,echo=FALSE}
+```{r,echo=FALSE,fig.show="hold",out.width="50%"}
 par(mar=c(4,4,.1,.1))
 img1_path <- "trans-ex.png"
 img2_path <- "cis-ex.png"
@@ -542,17 +544,19 @@ rm(p2)
 gc()
 ```
 
+## q.value vs count
+
+It should be noted that majority of the interactions in radicl-seq are trans interactions(`r length(which(is.na(ibed$distance)))*100/length(ibed$bait.id)`), therefore the distance relation of the score for significant inteactions can not be visualized easily here. 
 
 
-### Without MALAT1 and NEAT1
-
-```{r,message=FALSE,warning=FALSE}
-#malat1 neat1
-ggplot(ibed[is.na(ibed$distance)|!ibed$bait_name=="MALAT1"|!ibed$baitname=="NEAT1"],aes(count,log(q.value,base=10)))+
-  geom_point(color="#69b3a2",size=0.5,alpha=0.3)+
-  theme_cowplot()+
-  ggtitle("Count distribution of trans interaction without MALAT1 and NEAT1")
+```{r,echo=FALSE}
+p1 <- ggdraw()+draw_image("count.jpeg")
+p2 <- ggdraw()+draw_image("count_wo.jpeg")
+p3 <- ggdraw()+draw_image("ex_count.jpeg")
+(p1 | p2) / 
+  p3
 ```
+
 
 ```{r,echo=FALSE,warning=FALSE,message=FALSE,results='hide'}
 rm(p34)
