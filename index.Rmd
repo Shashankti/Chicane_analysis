@@ -563,6 +563,261 @@ rm(p34)
 gc()
 ```
 
+# Attempt to apply p-value weighting from CHiCAGO
+
+CHiCAGO uses a p-value weighting method to filter out erroneous calls, Chicane on the other hand applies the Benjamini & Hochberg method for multiple testing correction. However this method applies a stringent p-value threshold and may thus disregard the long range false positive but this might also result in removing many short range true positives. To test this hypothesis we can apply the p-value wieghting method here and compare the results.
+
+
+```{r,eval=FALSE,results='hide'}
+ibed <-getScores(ibed)
+getScores <- function(ibed)
+  {
+  ## - If method="weightedRelative", we divide by weights (Genovese et al 2006)
+  ##Note to self: Algebra is on P96 of my lab notebook.
+  
+  avgFragLen <- .getAvgFragLength(ibed) ##average fragment length
+  
+  
+    eta.bar <- .getEtaBar(ibed)
+    ibed$log.p <- log10(ibed$p.value)
+    
+    ##Get weights, weight p-values
+    message("Calculating p-value weights...")
+    ibed[, log.w:= .getWeights(abs(ibed$distance), ibed, eta.bar=eta.bar)]
+    ibed[, log.q:= log.p - log.w] ##weighted p-val
+    message("Calculating scores...")
+    
+    ##get score (more interpretable than log.q)
+    minval <- .getWeights(0, ibed, eta.bar=eta.bar) ##FIXME could be optimized a *lot*.
+    ibed[,score := pmax(- minval - log.q, 0)]
+    
+  ibed
+}
+
+.getAvgFragLength <- function(ibed)
+{
+  ##Normally, takes rmapfile from cd object.
+  ##However, if rmapfile is specified, this overrides cd.
+  
+  rmap <- unique(ibed[,3:5])
+  chrMax <- rmap[,max(target.end),by="target.chr"] ##length of each chr
+  sum(as.numeric(chrMax$V1))/nrow(rmap)
+}
+
+.getNoOfHypotheses <- function(ibed)
+{
+  
+  ##How many hypotheses are we testing? (algebra on p246 of JMC's lab notebook)
+  rmap <- unique(ibed[,3:5])
+  chrMax <- rmap[,max(target.end),by="target.chr"] ##length of each chr
+  baitmap <- unique(ibed[,6:8])
+  nBaits <- table(baitmap$bait.chr)
+  avgFragLen <- .getAvgFragLength(ibed) ##average fragment length
+  
+  chr <- chrMax$target.chr
+  ##count # of hypotheses
+  Nhyp <- sum(nBaits)*(2*nrow(rmap) - sum(nBaits) - 1)/2L ##number of hypotheses being tested
+  Nhyp
+}
+set <- example@settings
+.getEtaBar <- function(cd, includeTrans=TRUE)
+{
+  
+  ##1. Collect parameters
+  alpha = set$weightAlpha
+  beta = set$weightBeta
+  gamma = set$weightGamma
+  delta = set$weightDelta
+  
+  ##2. Get genomic/fragment map information
+  rmap <- unique(ibed[,3:5])
+  chrMax <- rmap[,max(target.end),by="target.chr"] ##length of each chr
+  baitmap <- unique(ibed[,6:8])
+  nBaits <- table(baitmap$bait.chr)
+  
+  
+  chr <- as.character(names(nBaits))
+  
+  avgFragLen <- .getAvgFragLength(ibed)
+  
+  ##count # of hypotheses
+  Nhyp <- .getNoOfHypotheses(ibed)
+  
+  ##3. Calculate eta.bar
+  ##Loop, summing contributions of eta
+  
+  eta.sigma <- 0 
+  for(c in chr)
+  {
+    ##length of chromosome
+    d.c <- as.numeric(chrMax$V1[chrMax$target.chr == c])
+    ##no of baits on chromosome
+    n.c <- nBaits[c]
+    
+    for(i in 1:n.c) ##TODO nested for loop can be replaced with lapply & function
+    {
+      d = d.c*i/n.c
+      d.near = min(d, d.c-d) ##dist to nearest chromosome end
+      d.other <- seq(from=avgFragLen, to=max(avgFragLen,d.near), by = avgFragLen) ##locations of fragments
+      d.other2 <- seq(from=d.near, to=d.c-d.near, by = avgFragLen)
+      eta.sigma <- eta.sigma + 2*sum(expit(alpha + beta*log(d.other))) + sum(expit(alpha + beta*log(d.other2)))
+      #eta[i] <- 2*sum(expit(alpha + beta*log(d.other))) + sum(expit(alpha + beta*log(d.other2)))
+    }
+  }
+  
+  eta.bar <- eta.sigma/Nhyp
+  eta.bar
+}
+
+.getWeights <- function(dist,ibed,eta.bar)
+{
+  alpha = set$weightAlpha
+  beta = set$weightBeta
+  gamma = set$weightGamma
+  delta = set$weightDelta
+  
+  ##4. Calculate weights
+  eta <- expit(alpha + beta*log(naToInf(dist)))
+  log.w <- log((expit(delta) - expit(gamma))*eta + expit(gamma)) -
+    log((expit(delta) - expit(gamma))*eta.bar + expit(gamma))
+  
+  log.w
+}
+
+
+
+
+## Misc functions ---------------------------
+
+wb2b = function(oeID, s, baitmap=NULL){
+  # s is the current chicagoData object's settings list
+  if (is.null(baitmap)){
+    baitmap = .readBaitmap(s)
+  }
+  which(oeID %in% baitmap[[s$baitmapFragIDcol]])
+}
+
+whichbait2bait = function(x, baitmap=NULL){
+  stop("whichbait2bait is deprecated. Use wb2b instead")
+}
+
+as.dataTableList <- function(cd){ 
+  # takes a list of chicagoData objects cd and returns a list of data tables 
+  # from the respective cd@x slots
+  lapply(cd, function(cdi)cdi@x)
+}
+
+geo_mean <- function(data){    
+  log_data <- log(data);    
+  gm <- exp(mean(log_data[is.finite(log_data)]));    
+  return(gm) 
+} # http://stackoverflow.com/questions/2602583/geometric-mean-is-there-a-built-in
+
+logit <- function(p){log(p/(1-p))}
+
+expit <- function(x){1/(1+exp(-x))}
+
+removeNAs <- function(x) {x[!is.na(x)]}
+
+naToInf <- function(x)
+{
+  ifelse(is.na(x), Inf, x) ##Convert NAs to infs.
+}
+
+ifnotnull = function(var, res){ if(!is.null(var)){res}}
+
+locateFile = function(what, where, pattern){
+  message("Locating ", what, " in ", where, "...")
+  filename = list.files(where, pattern)
+  
+  if (length(filename)!=1){
+    stop(paste0("Could not unambigously locate a ", what, " in ", where, ". Please specify explicitly in settings\n"))
+  }
+  
+  message("Found ", filename)
+  file.path(where, filename)
+}
+```
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+load("score.RData")
+ibed_stretch_cis <- ibed[!is.na(distance),.(count2=1:count),names(ibed)]
+ibed_stretch_trans <- ibed[is.na(distance),.(count2=1:count),names(ibed)]
+ibed_stretch <- rbind(ibed_stretch_trans,ibed_stretch_cis)
+
+ibed_signif_stretch <- signif[!is.na(distance),.(count2=1:count),names(signif)]
+without_ibed <- ibed_stretch[!ibed_stretch$bait_name=="MALAT1"]
+without_ibed <- without_ibed[!without_ibed$bait_name=="NEAT1"]
+
+
+wo_mn <- ibed[!ibed$bait_name=="MALAT1"]
+wo_mn <- wo_mn[!wo_mn$bait_name=="NEAT1"]
+```
+
+## Score distribution
+```{r}
+ggplot(ibed_stretch,aes(log10(score)))+
+  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Score distribution for radicl-seq")+
+  geom_vline(xintercept = log10(5),color="grey")+
+  annotate(x=log10(5),y=2,label="score=5",vjust=2,geom ="label")+
+  theme_cowplot()
+```
+
+### Without MALAT1 and NEAT1
+
+```{r}
+ggplot(without_ibed,aes(log10(score)))+
+  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Score distribution without MALAT1 and NEAT1")+
+  geom_vline(xintercept = log10(5),color="grey")+
+  annotate(x=log10(5),y=2,label="score=5",vjust=2,geom ="label")+
+  theme_cowplot()
+```
+### Cis vs trans interactions
+
+```{r,fig.show="hold",out.width="50%",fig.cap="Distribution of score"}
+##Cis-trans-ex_plot
+par(mar=c(4,4,.1,.1))
+ggplot(ibed_stretch_cis,aes(log10(score)))+
+  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Score distribution for data(Cis)")+
+  geom_vline(xintercept = log10(5),color="grey")+
+  annotate(x=log10(5),y=2,label="score=5",vjust=2,geom ="label")+
+  theme_cowplot()
+
+ggplot(ibed_stretch_trans,aes(log10(score)))+
+  geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8)+
+  ggtitle("Score distribution for data(Trans)")+
+  geom_vline(xintercept = log10(5),color="grey")+
+  annotate(x=log10(5),y=2,label="score=5",vjust=2,geom ="label")+
+  theme_cowplot()
+```
+
+```{r,echo=FALSE,message=FALSE,results='hide'}
+gc()
+```
+
+#### Without MALAT1 and NEAT1
+```{r,fig.show="hold",out.width="50%",fig.cap="Distribution of q.value"}
+##Cis-trans-ex_plot
+par(mar=c(4,4,.1,.1))
+ggplot(without_ibed[!is.na(without_ibed$distance)],aes(log10(score)))+
+  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Score distribution for data(Cis)")+
+  geom_vline(xintercept = log10(5),color="grey")+
+  annotate(x=log10(5),y=2,label="score=5",vjust=2,geom ="label")+
+  theme_cowplot()
+
+ggplot(without_ibed[is.na(without_ibed$distance)],aes(log10(score)))+
+  geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8)+
+  ggtitle("Score distribution for data(Trans)")+
+  geom_vline(xintercept = log10(5),color="grey")+
+  annotate(x=log10(5),y=2,label="score=5",vjust=2,geom ="label")+
+  theme_cowplot()
+```
+
+
 # Comparison with previous plots
 
 Previously we had seen certain plots which stood out when looking at the relationship between the probability of detecting an interaction and the distance. We compare these plots with the current q.value distribution.
@@ -574,6 +829,7 @@ Previously we had seen certain plots which stood out when looking at the relatio
 
 ibed <- ibed[!is.na(distance)]
 MALAT1 <- ibed[ibed$bait_name=="MALAT1"]
+MALAT1 <- MALAT1[!is.na(MALAT1$distance)]
 q.count <- quantile(MALAT1$count,c(0.30,0.60,0.90,0.95))
 MALAT1$q.count <- with(MALAT1,ifelse(count<q.count[1],0,
                                  ifelse(count<q.count[2],1,
@@ -596,10 +852,19 @@ p2 = ggplot(MALAT1 ,aes(x=distance,y=log(q.value,base=10)))+
     ggtitle("MALAT1")+
     theme_cowplot()+
     ylab("log(q.value)")
+p3 = ggplot(MALAT1 ,aes(x=distance,y=score))+
+    geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
+    scale_colour_manual(name="percentile of counts",
+                    values=c("#69b3a2","black","darkgoldenrod4","coral1","red"),labels=c("0-30","30-60","60-90","90-95","95-100"))+
+    ggtitle("MALAT1")+
+    theme_cowplot()+
+    ylab("score")
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
 p2 = xmlSVG({show(p2)}, standalone = TRUE)  
-slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
+p3 = xmlSVG({show(p3)}, standalone = TRUE)  
+
+slickR(list(p1, p2,p3)) + settings(dots = TRUE, autoplay = TRUE)
 ```
 
 ## RNVU1-7
@@ -774,6 +1039,7 @@ slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
 ```{r}
 #EHBP1
 EHBP1 <- ibed[ibed$bait_name=="EHBP1"]
+EHBP1 <- EHBP1[!is.na(EHBP1$distance)]
 q.count <- quantile(EHBP1$count,c(0.30,0.60,0.90,0.95))
 EHBP1$q.count <- with(EHBP1,ifelse(count<q.count[1],0,
                                  ifelse(count<q.count[2],1,
@@ -792,8 +1058,8 @@ p1 = ggplot(EHBP1,aes(distance))+
 setorder(EHBP1,q.count)
 p2 = ggplot(EHBP1,aes(x=distance,y=log(q.value,base=10)))+
     geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
-    scale_colour_manual(name="percentile of counts",
-                    values=c("#69b3a2","black","darkgoldenrod4","coral1","red"),labels=c("0-30","30-60","60-90","90-95","95-100"))+
+    scale_colour_viridis(name="percentile of counts",
+                   discrete=TRUE,labels=c("0-30","30-60","60-90","90-95","95-100"))+
     ggtitle("EHBP1")+
     theme_cowplot()+
     ylab("log(q.value)")
@@ -871,4 +1137,72 @@ p2 = xmlSVG({show(p2)}, standalone = TRUE)
 slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
 ```
 
+##KIF20B
 
+```{r}
+KIF20B <- ibed[ibed$bait_name=="KIF20B"]
+KIF20B <- KIF20B[!is.na(KIF20B$distance)]
+q.count <- quantile(KIF20B$count,c(0.30,0.60,0.90,0.95))
+KIF20B$q.count <- with(KIF20B,ifelse(count<q.count[1],0,
+                                 ifelse(count<q.count[2],1,
+                                  ifelse(count<q.count[3],2,
+                                  ifelse(count<q.count[4],3,4)))))
+
+#dist
+p1 = ggplot(KIF20B,aes(distance))+
+  geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
+  scale_y_continuous(labels = scales::percent)+
+  ggtitle("KIF20B")+
+  xlab("Distance of interaction")+
+  ylab("Probability")+
+  theme_cowplot()
+
+setorder(KIF20B,q.count)
+p2 = ggplot(KIF20B,aes(x=distance,y=log(q.value,base=10)))+
+    geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
+    scale_colour_viridis(name="percentile of counts",
+                         discrete = TRUE,
+                    labels=c("0-30","30-60","60-90","90-95","95-100"))+
+    ggtitle("KIF20B")+
+    theme_cowplot()+
+    ylab("log(q.value)")
+
+p1 = xmlSVG({show(p1)}, standalone = TRUE)  
+p2 = xmlSVG({show(p2)}, standalone = TRUE)  
+slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
+```
+
+## PCDH9
+ 
+```{r}
+#KIF20B
+PCDH9 <- ibed[ibed$bait_name=="PCDH9"]
+PCDH9 <- PCDH9[!is.na(PCDH9$distance)]
+q.count <- quantile(PCDH9$count,c(0.30,0.60,0.90,0.95))
+PCDH9$q.count <- with(PCDH9,ifelse(count<q.count[1],0,
+                                 ifelse(count<q.count[2],1,
+                                  ifelse(count<q.count[3],2,
+                                  ifelse(count<q.count[4],3,4)))))
+
+#dist
+p1 = ggplot(PCDH9,aes(distance))+
+  geom_histogram(fill="#69b3a2",aes(y = stat(count)/sum(count)))+
+  scale_y_continuous(labels = scales::percent)+
+  ggtitle("PCDH9")+
+  xlab("Distance of interaction")+
+  ylab("Probability")+
+  theme_cowplot()
+
+setorder(PCDH9,q.count)
+p2 = ggplot(PCDH9,aes(x=distance,y=log(q.value,base=10)))+
+    geom_point(aes(color=as.factor(q.count)),size=0.5,alpha=0.3)+
+    scale_colour_manual(name="percentile of counts",
+                    values=c("#69b3a2","black","darkgoldenrod4","coral1","red"),labels=c("0-30","30-60","60-90","90-95","95-100"))+
+    ggtitle("PCDH9")+
+    theme_cowplot()+
+    ylab("log(q.value)")
+
+p1 = xmlSVG({show(p1)}, standalone = TRUE)  
+p2 = xmlSVG({show(p2)}, standalone = TRUE)  
+slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
+```
