@@ -41,6 +41,7 @@ library(slickR)
 library(svglite)
 library(patchwork)
 library(magick)
+library(DT)
 ```
 
 
@@ -195,6 +196,8 @@ We look at the counts of distance for the interactions.
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 rm(ex)
+rm(exp_cis)
+rm(exp_trans)
 gc()
 ```
 
@@ -385,6 +388,8 @@ ggplot(without_ibed[without_ibed$q.value<0.05],aes(distance))+
   theme_cowplot()+
   theme(plot.title = element_text(size = 10))
 ```
+
+
 ## Distance relation of q.value
 
 Next we look at the distribution of the q,value with the distance and the counts.
@@ -754,7 +759,123 @@ wo_mn <- ibed[!ibed$bait_name=="MALAT1"]
 wo_mn <- wo_mn[!wo_mn$bait_name=="NEAT1"]
 ```
 
+
+Significant interactions can be sorted out based on a threshold of score>5. On comparing the significant interactions obtained from the q.value threshold and p-value weighted score threshold we can observer that q.value threshold removes far less interaction when compared with the `score`.
+
+## Comparision of distance distibution of significant interaction
+
+
+```{r}
+#Filtering significant
+chic_signif <- ibed[ibed$score>5]
+p1 = ggplot(ibed_signif_stretch,aes(distance))+
+  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Distribution of distance for radicl-seq(q.value)")+
+  theme_cowplot()+
+  theme(plot.title = element_text(size = 10))
+p2 = ggplot(chic_signif[chic_signif$score>5],aes(distance))+
+  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Distribution of distance for radicl-seq(score)")+
+  theme_cowplot()+
+  theme(plot.title = element_text(size = 10))
+p1 = xmlSVG({show(p1)}, standalone = TRUE)  
+p2 = xmlSVG({show(p2)}, standalone = TRUE)
+
+
+
+slickR(list(p1, p2))
+```
+
+### Without MALAT1 and NEAT1
+
+```{r}
+p1 = ggplot(without_ibed[without_ibed$q.value<0.05],aes(distance))+
+  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Distribution of distance without MALAT1 and NEAT1")+
+  theme_cowplot()+
+  theme(plot.title = element_text(size = 10))
+p2 = ggplot(wo_mn[wo_mn$score>5],aes(distance))+
+  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
+  ggtitle("Distribution of distance for radicl-seq(score)")+
+  theme_cowplot()+
+  theme(plot.title = element_text(size = 10))
+p1 = xmlSVG({show(p1)}, standalone = TRUE)  
+p2 = xmlSVG({show(p2)}, standalone = TRUE)
+
+slickR(list(p1, p2))
+
+```
+We can further compare the significant interactions from both multiple testing procedures. 
+
+```{r}
+DT::datatable(chic_signif[,c(1,2,12,13,16,22,17)])
+```
+
+
+```{r,out.width="50%",fig.show='hold'}
+p1 = ggplot(ibed[!is.na(ibed$distance) & ibed$score>5] %>% arrange(score),aes(x=distance,y=count))+
+  geom_point(size=0.3,alpha=0.3,
+             aes(color =log10(score))) +
+  scale_colour_viridis() + 
+   xlab("distance")+
+  ylab("count")+
+  theme_cowplot()+
+  ggtitle("Significant interactions based on score approach")+
+  theme(plot.title = element_text(size = 10))
+p2 = ggplot(ibed[!is.na(ibed$distance) & ibed$q.value<0.05] %>% arrange(log10(-q.value)),aes(x=distance,y=count))+
+  geom_point(size=0.3,alpha=0.3,aes(color = log10(q.value))) +
+  scale_color_viridis_c()+
+   xlab("distance")+
+  ylab("count")+
+  theme_cowplot()+
+  ggtitle("Significant interactions based on q.value approach")+
+  theme(plot.title = element_text(size = 10))
+plot(p1)
+plot(p2)
+```
+
+
+A total of `r 100*length(chic_signif_cis$target.id)/length(chic_signif$target.id)` % interactions are cis interactions using the alternative approach, compared with the `r 100*length(signif[!is.na(signif$distance)]$target.id)/length(signif$target.id)`.
+
+The mean distance for the score approach is `r mean(chic_signif_cis$distance,na.rm=TRUE)`, compared with `r mean(signif[!is.na(signif$distance)]$distance)`.
+
+It can also be seen that the filtered interactions from the 'score' apporach is a subset of the interactions from 'q.value' approach.
+
+```{r}
+DT::datatable(signif[signif$score<5][,c(1,2,12,13,16,22,17)])
+```
+
+In these interactions. `r 100*length(signif[signif$score<5 & !is.na(signif$distance)]$target.id)/length(signif[signif$score<5]$target.id)`% are cis interactions, with a mean distance of `r mean(signif[signif$score<5 & !is.na(signif$distance)]$distance)`. Therefore it can be seen that interaction with higher distance are being downweighted when using this approach.
+
+
+```{r}
+p1 = ggplot(signif[signif$score<5 & is.na(signif$distance)] %>% arrange(distance),aes(x=log10(q.value),y=log(score),base=10))+
+  geom_point(aes(color=distance),size=0.5,alpha=0.3)+
+    scale_colour_viridis()+
+    xlab("log10 q.value")+
+  ylab("log10 score")+
+  theme_cowplot()+
+  ggtitle("Outlier trans interactions")+
+  theme(plot.title = element_text(size = 10))
+p2 = ggplot(signif[signif$score<5 & !is.na(signif$distance)] %>% arrange(distance),aes(x=log10(q.value),y=log(score),base=10))+
+  geom_point(aes(color=distance),size=0.5,alpha=0.3)+
+    scale_colour_viridis()+
+    xlab("log10 q.value")+
+  ylab("log10 score")+
+  theme_cowplot()+
+  ggtitle("Outlier cis interactions")+
+  theme(plot.title = element_text(size = 10))
+p1 = xmlSVG({show(p1)}, standalone = TRUE)  
+p2 = xmlSVG({show(p2)}, standalone = TRUE)
+
+
+slickR(list(p1, p2))
+
+```
+
 ## Score distribution
+
+
 ```{r}
 ggplot(ibed_stretch,aes(log10(score)))+
   geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
@@ -817,6 +938,39 @@ ggplot(without_ibed[is.na(without_ibed$distance)],aes(log10(score)))+
   theme_cowplot()
 ```
 
+
+## Relation with score and distance
+
+```{r}
+p1 = ggplot(chic_signif_cis %>% arrange(count),aes(x=distance,y=log(score,base=10)))+
+  geom_point(aes(color=count),size=0.5,alpha=0.3)+
+    scale_colour_viridis()+
+    xlab("distance")+
+  ylab("log10 score")+
+  theme_cowplot()+
+  ggtitle("score distribution of significant interactions")+
+  theme(plot.title = element_text(size = 10))+
+  geom_hline(yintercept = log10(5),color="red")+
+  annotate(y=log10(5),x=1.0e+08,label="score=5",vjust=2,geom ="label")
+
+
+p2 = ggplot(wo_mn[wo_mn$score>5] %>% arrange(count),aes(x=distance,y=log(score,base=10)))+
+  geom_point(aes(color=count),size=0.5,alpha=0.3)+
+    scale_colour_viridis()+
+    xlab("distance")+
+  ylab("log10 score")+
+  theme_cowplot()+
+  ggtitle("score distribution of significant interactions without MALAT1 and NEAT1")+
+  theme(plot.title = element_text(size = 10))+
+  geom_hline(yintercept = log10(5),color="red")+
+  annotate(y=log10(5),x=1.0e+08,label="score=5",vjust=2,geom ="label")
+
+p1 = xmlSVG({show(p1)}, standalone = TRUE)  
+p2 = xmlSVG({show(p2)}, standalone = TRUE)
+
+
+slickR(list(p1, p2))
+```
 
 # Comparison with previous plots
 
