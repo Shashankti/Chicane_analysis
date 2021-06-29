@@ -44,31 +44,20 @@ library(magick)
 library(DT)
 ```
 
-
 # Initial Observations
 
 We look to analyse the ouput from the initial chicane run. Compare the results from the previous Chicago run.
 
+# Introduction to the Chicane
 
+CHiCANE was designed to identify regions of interest that interact more than expected by chance. To indetify the interaction peaks, CHiCANE models the expected number of reads linking two restriction fragments as a function of the distance between the loci and the 'interactibility' of the bait fragment; that is, its inherent propensity to interact with other fragments.
 
+Let $Y_{ij}$ represent the count of interactions between a bait $i$ and a fragment $j$,$d_{ij}$ be the distance between the bait and the otherEnd and $t_{i}$ denote the number of reads linking a bait $i$ with another fragment in trans. $Y_{ij}$ is such that it is assumed to follow a distribution with a mean $\mu_{ij}$ as: $$ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij}) + \beta_2 \log(t_i+1) $$
 
-
-
-# Introduction to the Chicane 
-
-CHiCANE was designed to identify regions of interest that interact more than expected by chance. To indetify the interaction peaks, CHiCANE models the expected number of reads linking two restriction fragments as a function of the distance between the loci and the ‘interactibility’ of the bait fragment; that is, its inherent propensity to interact with other fragments.
-
-Let $Y_{ij}$ represent the count of interactions between a bait $i$ and a fragment $j$,$d_{ij}$ be the distance between the bait and the otherEnd and $t_{i}$ denote the number of reads linking a bait $i$ with another fragment in trans. $Y_{ij}$ is such that it is assumed to follow a distribution with a mean $\mu_{ij}$ as:
-$$ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij}) + \beta_2 \log(t_i+1) $$
-
-
-For bait to bait interactions, terms are added to the model to adjust for trans counts of the other end, fragment j, and the product of trans counts of both fragments as:
-$$ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij}) + \beta_2 \log(t_i+1)  + \beta_3 \log(t_j + 1) + \beta_4 \log(t_i +1) \log(t_j+1)$$
-Each possible interaction is assaigned an expected $\mu_{ij}$ and a p-value for the observed counts $y_{ij}$ versus what is expected by chance is calculated as:
-$$p = P(Y_{ij} \geq y_{ij})$$
-
+For bait to bait interactions, terms are added to the model to adjust for trans counts of the other end, fragment j, and the product of trans counts of both fragments as: $$ \mu_{ij} = \beta_0 + \beta_1 \log(d_{ij}) + \beta_2 \log(t_i+1)  + \beta_3 \log(t_j + 1) + \beta_4 \log(t_i +1) \log(t_j+1)$$ Each possible interaction is assaigned an expected $\mu_{ij}$ and a p-value for the observed counts $y_{ij}$ versus what is expected by chance is calculated as: $$p = P(Y_{ij} \geq y_{ij})$$
 
 # Example data
+
 The example data used here is from the T47D human breast cancer cells. The input files used for the `Chicane` run were the output from the CHi-C libraries generated in the ER+ breast cancer cell line.
 
 Let us first look at plots from the example data set provided with the chicane paper.
@@ -79,7 +68,9 @@ ex = fread("/home/master/shared_folder/radicl_seq/Data/Raw/CHiCANE_Supplementary
 # Significant interactions
 ex_signif <- ex[ex$q.value<0.05]
 ```
-Adjusting for including the correct counts. 
+
+Adjusting for including the correct counts.
+
 ```{r}
 ex_stretch <- ex[!is.na(q.value),.(count2=1:count),names(ex)]
 
@@ -94,6 +85,7 @@ p34 = ggplot(ex[is.na(ex$distance)],aes(count,log(q.value,base=10)))+
 ```
 
 ## Score distribution of example data
+
 This is the output for the example data. A threshold of 0.05 is used to determine significant interactions.
 
 ```{r}
@@ -141,11 +133,9 @@ plot(exp_trans)
 gc()
 ```
 
-
-
 ## Correlation plot
-We plot the correlation between the observed p.value and the counts of interaction for example data. Note that the p.value here is unweighted.
 
+We plot the correlation between the observed p.value and the counts of interaction for example data. Note that the p.value here is unweighted.
 
 ```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Cis vs Trans",eval=FALSE}
 par(mar=c(4,4,.1,.1))
@@ -187,12 +177,9 @@ p2 <- ggdraw()+draw_image("cis-ex.png")
 (p1 | p2)
 ```
 
-
-
 ## Distance distibution for example data
+
 We look at the counts of distance for the interactions.
-
-
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 rm(ex)
@@ -200,7 +187,6 @@ rm(exp_cis)
 rm(exp_trans)
 gc()
 ```
-
 
 ```{r}
 ggplot(ex_stretch_cis,aes(ex_stretch_cis$distance))+
@@ -212,7 +198,9 @@ ggplot(ex_stretch_cis,aes(ex_stretch_cis$distance))+
 ```
 
 ### Significant interactions
+
 Filtering this data for the significant interactions.
+
 ```{r}
 ggplot(ex_signif_stretch,aes(ex_signif_stretch$distance))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
@@ -228,9 +216,7 @@ rm(ex_stretch)
 gc()
 ```
 
-
 # Radicl-seq data
-
 
 ```{r}
 
@@ -261,11 +247,9 @@ cis_signif_wo$q.count <- with(cis_signif_wo,ifelse(count<q.count[1],0,
                                   ifelse(count<q.count[4],3,4)))))
 ```
 
-
 ```{r,echo=FALSE,warning=FALSE,message=FALSE}
 gc()
 ```
-
 
 ```{r}
 
@@ -276,19 +260,20 @@ ibed_stretch <- rbind(ibed_stretch_trans,ibed_stretch_cis)
 ibed_signif_stretch <- signif[!is.na(distance),.(count2=1:count),names(signif)]
 ```
 
-
 ## Score distribution for radicl-seq.
 
 Let us first look at the scores for radicl-seq.
+
 ```{r}
 ggplot(ibed_stretch,aes(q.value))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
   ggtitle("Score distribution for radicl-seq")+
   theme_cowplot()
 ```
+
 ### Without MALAT1 and NEAT1
 
-`r 100*length(ibed_stretch[ibed_stretch$bait_name=="MALAT1" | ibed_stretch$bait_name=="NEAT1"]$distance)/length(ibed_stretch$distance)` % of interactions observed are from MALAT1 and NEAT1. We remove those interactions from the data set and compare the results 
+`r 100*length(ibed_stretch[ibed_stretch$bait_name=="MALAT1" | ibed_stretch$bait_name=="NEAT1"]$distance)/length(ibed_stretch$distance)` % of interactions observed are from MALAT1 and NEAT1. We remove those interactions from the data set and compare the results
 
 ```{r}
 without_ibed <- ibed_stretch[!ibed_stretch$bait_name=="MALAT1"]
@@ -302,7 +287,6 @@ ggplot(without_ibed,aes(q.value))+
   ggtitle("Score distribution without MALAT1 and NEAT1")+
   theme_cowplot()
 ```
-
 
 ### Cis vs trans interactions
 
@@ -327,6 +311,7 @@ gc()
 ```
 
 ### Without MALAT1 and NEAT1
+
 ```{r,fig.show="hold",out.width="50%",fig.cap="Distribution of q.value"}
 ##Cis-trans-ex_plot
 par(mar=c(4,4,.1,.1))
@@ -352,6 +337,7 @@ ggplot(ibed_stretch_cis,aes(distance))+
 ```
 
 ### Without MALAT1 and NEAT1
+
 ```{r}
 ggplot(without_ibed,aes(distance))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
@@ -364,9 +350,7 @@ ggplot(without_ibed,aes(distance))+
 
 A total of `34627` interactions are significant. This accounts for `0.2954271 %` of all interactions. However when we take into account the number of counts from each interaction as well, a total of `3.567306%` interactions are significant.
 
-Out of these significant interactions MALAT1 and NEAT1 account for `r length(ibed_signif_stretch[ibed_signif_stretch$bait_name=="MALAT1"|ibed_signif_stretch$bait_name=="NEAT1"]$target.id)/length(ibed_signif_stretch$distance)*100` 
-Filtering this data for the significant interactions.
-
+Out of these significant interactions MALAT1 and NEAT1 account for `r length(ibed_signif_stretch[ibed_signif_stretch$bait_name=="MALAT1"|ibed_signif_stretch$bait_name=="NEAT1"]$target.id)/length(ibed_signif_stretch$distance)*100` Filtering this data for the significant interactions.
 
 ```{r}
 
@@ -377,10 +361,8 @@ ggplot(ibed_signif_stretch,aes(distance))+
   theme(plot.title = element_text(size = 10))
 ```
 
-
 ### Without MALAT1 and NEAT1
 
- 
 ```{r}
 ggplot(without_ibed[without_ibed$q.value<0.05],aes(distance))+
   geom_histogram(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
@@ -388,7 +370,6 @@ ggplot(without_ibed[without_ibed$q.value<0.05],aes(distance))+
   theme_cowplot()+
   theme(plot.title = element_text(size = 10))
 ```
-
 
 ## Distance relation of q.value
 
@@ -439,20 +420,11 @@ rm(ibed_stretch_trans)
 gc()
 ```
 
-
-
-
-
-
-
-
 # Correlation plot
-
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 gc()
 ```
-
 
 ```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Cis vs Trans",eval=FALSE}
 par(mar=c(4,4,.1,.1))
@@ -497,7 +469,9 @@ include_graphics(img4_path)
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 gc()
 ```
+
 ## Without MALAT1 and NEAT1
+
 ```{r,message=FALSE,fig.show="hold",out.width="50%",fig.cap="Cis vs Trans"}
 par(mar=c(4,4,.1,.1))
 
@@ -530,7 +504,6 @@ ggplot(wo_mn[!is.na(wo_mn$distance)] %>% arrange(distance),aes(x = log(count,bas
   scale_color_viridis()
 ```
 
-
 ```{r,echo=FALSE,fig.show="hold",out.width="50%"}
 par(mar=c(4,4,.1,.1))
 img1_path <- "trans-ex.png"
@@ -539,7 +512,6 @@ include_graphics(img1_path)
 include_graphics(img2_path)
 
 ```
-
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 rm(without_ibed)
@@ -551,8 +523,7 @@ gc()
 
 ## q.value vs count
 
-It should be noted that majority of the interactions in radicl-seq are trans interactions(`r length(which(is.na(ibed$distance)))*100/length(ibed$bait.id)`), therefore the distance relation of the score for significant inteactions can not be visualized easily here. 
-
+It should be noted that majority of the interactions in radicl-seq are trans interactions(`r length(which(is.na(ibed$distance)))*100/length(ibed$bait.id)`), therefore the distance relation of the score for significant inteactions can not be visualized easily here.
 
 ```{r,echo=FALSE}
 p1 <- ggdraw()+draw_image("count.jpeg")
@@ -562,7 +533,6 @@ p3 <- ggdraw()+draw_image("ex_count.jpeg")
   p3
 ```
 
-
 ```{r,echo=FALSE,warning=FALSE,message=FALSE,results='hide'}
 rm(p34)
 gc()
@@ -571,7 +541,6 @@ gc()
 # Attempt to apply p-value weighting from CHiCAGO
 
 CHiCAGO uses a p-value weighting method to filter out erroneous calls, Chicane on the other hand applies the Benjamini & Hochberg method for multiple testing correction. However this method applies a stringent p-value threshold and may thus disregard the long range false positive but this might also result in removing many short range true positives. To test this hypothesis we can apply the p-value wieghting method here and compare the results.
-
 
 ```{r,eval=FALSE,results='hide'}
 ibed <-getScores(ibed)
@@ -759,60 +728,83 @@ wo_mn <- ibed[!ibed$bait_name=="MALAT1"]
 wo_mn <- wo_mn[!wo_mn$bait_name=="NEAT1"]
 ```
 
-
-Significant interactions can be sorted out based on a threshold of score>5. On comparing the significant interactions obtained from the q.value threshold and p-value weighted score threshold we can observer that q.value threshold removes far less interaction when compared with the `score`.
+Significant interactions can be sorted out based on a threshold of score\>5. On comparing the significant interactions obtained from the q.value threshold and p-value weighted score threshold we can observer that q.value threshold removes far less interaction when compared with the `score`.
 
 ## Comparision of distance distibution of significant interaction
-
 
 ```{r}
 #Filtering significant
 chic_signif <- ibed[ibed$score>5]
-p1 = ggplot(ibed_signif_stretch,aes(distance))+
-  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
-  ggtitle("Distribution of distance for radicl-seq(q.value)")+
+ggplot(data = ibed_stretch_cis)+
+  geom_density(data=ibed_stretch_cis[ibed_stretch_cis$q.value<0.05],
+               aes(log10(distance),fill="q.value"),alpha=0.3)+
+  geom_density(data = ibed_stretch_cis[ibed_stretch_cis$score>5],
+               aes(log10(distance),fill="score"),alpha=0.2)+
+  scale_fill_manual(values = c(q.value = '#69b3a2',score = '#F06C64'),
+                    labels=c("q.value","score"))+
+  ggtitle("Distribution of distance for significant interactions in radicl-seq")+
   theme_cowplot()+
   theme(plot.title = element_text(size = 10))
-p2 = ggplot(chic_signif[chic_signif$score>5],aes(distance))+
-  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
-  ggtitle("Distribution of distance for radicl-seq(score)")+
-  theme_cowplot()+
-  theme(plot.title = element_text(size = 10))
-p1 = xmlSVG({show(p1)}, standalone = TRUE)  
-p2 = xmlSVG({show(p2)}, standalone = TRUE)
 
 
-
-slickR(list(p1, p2))
 ```
 
 ### Without MALAT1 and NEAT1
 
 ```{r}
-p1 = ggplot(without_ibed[without_ibed$q.value<0.05],aes(distance))+
-  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
-  ggtitle("Distribution of distance without MALAT1 and NEAT1")+
+ggplot(data = without_ibed)+
+  geom_density(data=without_ibed[without_ibed$q.value<0.05],
+               aes(log10(distance),fill="q.value"),alpha=0.3)+
+  geom_density(data = without_ibed[without_ibed$score>5],
+               aes(log10(distance),fill="score"),alpha=0.2)+
+  scale_fill_manual(values = c(q.value = '#69b3a2',score = '#F06C64'),
+                    labels=c("q.value","score"))+
+  ggtitle("Distribution of distance for significant interactions without MALAT1 and NEAT1")+
   theme_cowplot()+
   theme(plot.title = element_text(size = 10))
-p2 = ggplot(wo_mn[wo_mn$score>5],aes(distance))+
-  geom_density(fill="#69b3a2", color="#e9ecef",alpha=0.8)+
-  ggtitle("Distribution of distance for radicl-seq(score)")+
-  theme_cowplot()+
-  theme(plot.title = element_text(size = 10))
-p1 = xmlSVG({show(p1)}, standalone = TRUE)  
-p2 = xmlSVG({show(p2)}, standalone = TRUE)
-
-slickR(list(p1, p2))
 
 ```
-We can further compare the significant interactions from both multiple testing procedures. 
+## Comparision of counts
+```{r}
+#Filtering significant
+ggplot(data = ibed_stretch_cis)+
+  geom_density(data=ibed_stretch_cis[ibed_stretch_cis$q.value<0.05],
+               aes(log10(count),fill="q.value"),alpha=0.3)+
+  geom_density(data = ibed_stretch_cis[ibed_stretch_cis$score>5],
+               aes(log10(count),fill="score"),alpha=0.2)+
+  scale_fill_manual(values = c(q.value = '#69b3a2',score = '#F06C64'),
+                    labels=c("q.value","score"))+
+  ggtitle("Distribution of counts for significant interactions in radicl-seq")+
+  theme_cowplot()+
+  xlim(0,5)+
+  theme(plot.title = element_text(size = 10))
+
+```
+
+### Without MALAT1 and NEAT1
+
+```{r}
+ggplot(data = without_ibed)+
+  geom_density(data=without_ibed[without_ibed$q.value<0.05],
+               aes(log10(count),fill="q.value"),alpha=0.3)+
+  geom_density(data = without_ibed[without_ibed$score>5],
+               aes(log10(count),fill="score"),alpha=0.2)+
+  scale_fill_manual(values = c(q.value = '#69b3a2',score = '#F06C64'),
+                    labels=c("q.value","score"))+
+  ggtitle("Distribution of distance for significant interactions without MALAT1 and NEAT1")+
+  theme_cowplot()+
+  xlim(0,5)+
+  theme(plot.title = element_text(size = 10))
+
+```
+
+We can further compare the significant interactions from both multiple testing procedures.
 
 ```{r}
 DT::datatable(chic_signif[,c(1,2,12,13,16,22,17)])
 ```
 
-
-```{r,out.width="50%",fig.show='hold'}
+```{r,out.width="50%",fig.show='hold',include=FALSE,echo=FALSE}
 p1 = ggplot(ibed[!is.na(ibed$distance) & ibed$score>5] %>% arrange(score),aes(x=distance,y=count))+
   geom_point(size=0.3,alpha=0.3,
              aes(color =log10(score))) +
@@ -834,7 +826,6 @@ plot(p1)
 plot(p2)
 ```
 
-
 A total of `r 100*length(chic_signif_cis$target.id)/length(chic_signif$target.id)` % interactions are cis interactions using the alternative approach, compared with the `r 100*length(signif[!is.na(signif$distance)]$target.id)/length(signif$target.id)`.
 
 The mean distance for the score approach is `r mean(chic_signif_cis$distance,na.rm=TRUE)`, compared with `r mean(signif[!is.na(signif$distance)]$distance)`.
@@ -847,21 +838,18 @@ DT::datatable(signif[signif$score<5][,c(1,2,12,13,16,22,17)])
 
 In these interactions. `r 100*length(signif[signif$score<5 & !is.na(signif$distance)]$target.id)/length(signif[signif$score<5]$target.id)`% are cis interactions, with a mean distance of `r mean(signif[signif$score<5 & !is.na(signif$distance)]$distance)`. Therefore it can be seen that interaction with higher distance are being downweighted when using this approach.
 
-
 ```{r}
-p1 = ggplot(signif[signif$score<5 & is.na(signif$distance)] %>% arrange(distance),aes(x=log10(q.value),y=log(score),base=10))+
+p1 = ggplot(signif[signif$score<5 & is.na(signif$distance)] %>% arrange(distance),aes(x=log10(q.value),y=score,base=10))+
   geom_point(aes(color=distance),size=0.5,alpha=0.3)+
     scale_colour_viridis()+
     xlab("log10 q.value")+
-  ylab("log10 score")+
   theme_cowplot()+
   ggtitle("Outlier trans interactions")+
   theme(plot.title = element_text(size = 10))
-p2 = ggplot(signif[signif$score<5 & !is.na(signif$distance)] %>% arrange(distance),aes(x=log10(q.value),y=log(score),base=10))+
+p2 = ggplot(signif[signif$score<5 & !is.na(signif$distance)] %>% arrange(distance),aes(x=log10(q.value),y=score))+
   geom_point(aes(color=distance),size=0.5,alpha=0.3)+
     scale_colour_viridis()+
     xlab("log10 q.value")+
-  ylab("log10 score")+
   theme_cowplot()+
   ggtitle("Outlier cis interactions")+
   theme(plot.title = element_text(size = 10))
@@ -874,7 +862,6 @@ slickR(list(p1, p2))
 ```
 
 ## Score distribution
-
 
 ```{r}
 ggplot(ibed_stretch,aes(log10(score)))+
@@ -895,6 +882,7 @@ ggplot(without_ibed,aes(log10(score)))+
   annotate(x=log10(5),y=2,label="score=5",vjust=2,geom ="label")+
   theme_cowplot()
 ```
+
 ### Cis vs trans interactions
 
 ```{r,fig.show="hold",out.width="50%",fig.cap="Distribution of score"}
@@ -920,6 +908,7 @@ gc()
 ```
 
 #### Without MALAT1 and NEAT1
+
 ```{r,fig.show="hold",out.width="50%",fig.cap="Distribution of q.value"}
 ##Cis-trans-ex_plot
 par(mar=c(4,4,.1,.1))
@@ -937,7 +926,6 @@ ggplot(without_ibed[is.na(without_ibed$distance)],aes(log10(score)))+
   annotate(x=log10(5),y=2,label="score=5",vjust=2,geom ="label")+
   theme_cowplot()
 ```
-
 
 ## Relation with score and distance
 
@@ -1054,7 +1042,6 @@ p2 = xmlSVG({show(p2)}, standalone = TRUE)
 slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)  
 ```
 
-
 ## RMRP
 
 ```{r}
@@ -1087,6 +1074,7 @@ p1 = xmlSVG({show(p1)}, standalone = TRUE)
 p2 = xmlSVG({show(p2)}, standalone = TRUE)  
 slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE) 
 ```
+
 ## EBF1
 
 ```{r}
@@ -1120,6 +1108,7 @@ p1 = xmlSVG({show(p1)}, standalone = TRUE)
 p2 = xmlSVG({show(p2)}, standalone = TRUE)  
 slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
 ```
+
 ## TENM4
 
 ```{r}
@@ -1256,6 +1245,7 @@ p1 = xmlSVG({show(p1)}, standalone = TRUE)
 p2 = xmlSVG({show(p2)}, standalone = TRUE)  
 slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
 ```
+
 ## DAB1
 
 ```{r,fig.show="hold",out.width="50%",fig.cap="DAB1 "}
@@ -1291,7 +1281,7 @@ p2 = xmlSVG({show(p2)}, standalone = TRUE)
 slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
 ```
 
-##KIF20B
+## KIF20B
 
 ```{r}
 KIF20B <- ibed[ibed$bait_name=="KIF20B"]
@@ -1327,7 +1317,7 @@ slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
 ```
 
 ## PCDH9
- 
+
 ```{r}
 #KIF20B
 PCDH9 <- ibed[ibed$bait_name=="PCDH9"]
