@@ -307,3 +307,146 @@ locateFile = function(what, where, pattern){
   message("Found ", filename)
   file.path(where, filename)
 }
+
+
+estimateDistFun <- function (cd, method="cubic", plot=TRUE, outfile=NULL) {
+  
+  # Take the "refBinMean" column of the data x as f(d_b)
+  # then interpolate & extrapolate to get f(d).
+  # TODO output extra diagnostic information?
+  
+  if (!method == "cubic"){
+    stop ("Unknown method.\n")
+  }
+  
+  # Get f(d_b)
+  setkey(cd@x, distbin)
+  f.d <- unique(cd@x, by=key(cd@x))[is.na(refBinMean)==FALSE][, c("distbin", "refBinMean"), with=FALSE]
+
+  setDF(f.d) # f.d is tiny, so no need to bother with it being a data.table
+  f.d$midpoint <- seq(from=round(cd@settings$binsize/2), by=cd@settings$binsize, length.out=nrow(f.d))
+  
+  obs.min <- log(min(f.d$midpoint))
+  obs.max <- log(max(f.d$midpoint))
+  
+  #   if(method == "lm") {
+  #
+  #     ##previously had arguments: n.obs.head=10, n.obs.tail=25
+  #
+  #     ##On log-scale, do a linear interpolation.
+  #     ##Linear models applied to first (n.obs.head) observations, and to last (n.obs.tail) observations.
+  #     
+  #     ##Interpolation: Estimate f(d) (NB "rule" parameter = 1 forces NAs outside of range)
+  #     log.f.obs <- approxfun(log(f.d$midpoint), log(f.d$refBinMean), rule=c(1,1))
+  #     
+  #     ##Extrapolation: Fit the "head" and "tail" of f using a linear model
+  #     head.coef <- coefficients(lm(log(refBinMean)~log(midpoint), data = head(f.d, n.obs.head))) ##Fit for small d
+  #     tail.coef <- coefficients(lm(log(refBinMean)~log(midpoint), data = tail(f.d, n.obs.tail))) ##Fit for large d
+  #     
+  #   }
+  
+  if(method == "cubic") {
+    ##Spline - Cubic fit over observed interval, linear fit elsewhere, assume continuity of f(d) & f'(d).
+    distFunParams <- list(method="cubic")
+    
+    ##cubic fit (quadratic not immensely different TBH)
+    f.d.cubic <- lm(log(refBinMean) ~ log(midpoint) + I(log(midpoint)^2) + I(log(midpoint)^3), data = f.d)
+    fit <- f.d.cubic$coefficients
+    distFunParams[["cubicFit"]] <- fit
+    
+    ##Extrapolation: Fit the "head" and "tail" of f using continuity
+    distFunParams[["obs.min"]] <- log(min(f.d$midpoint))
+    distFunParams[["obs.max"]] <- log(max(f.d$midpoint))
+    
+    beta <- fit[2] + 2*fit[3]*c(obs.min, obs.max) + 3*fit[4]*(c(obs.min, obs.max)^2)
+    alpha <- fit[1] + (fit[2] - beta)*c(obs.min, obs.max) + fit[3]*c(obs.min, obs.max)^2 + fit[4]*c(obs.min, obs.max)^3
+    
+    distFunParams[["head.coef"]] <- c(alpha[1], beta[1])
+    distFunParams[["tail.coef"]] <- c(alpha[2], beta[2])
+    
+  }
+  
+  cd@params$distFunParams <- distFunParams
+  
+  if(plot)
+  {
+    if (!is.null(outfile)){ 
+      pdf(outfile)
+    }
+    
+    plotDistFun(cd)
+#     my.log.d <- seq(from=obs.min, to=obs.max, length.out = 101)
+#     my.d <- exp(my.log.d)
+#     plot(my.log.d, log(.distFun(my.d, distFunParams)),
+#          type="l",
+#          main = "Distance function estimate",
+#          xlab = "log distance",
+#          ylab = "log f",
+#          col = "Red")
+     with(f.d, points(log(midpoint), log(refBinMean)))
+     legend("topright", legend = c("Data", "Fit"), col = c("Black", "Red"), pch = c(1, NA), lty=c(0,1))
+    if (!is.null(outfile)){
+      dev.off()
+    }
+  }
+  
+  cd
+}
+
+.distFun <- function(d, distFunParams)
+{
+  ##d: distSign column of cd@x
+  
+  ##distFunParams: list of form
+  ##list(method, ...)
+  ##so list("cubic", head.coef, tail.coef, obs.min, obs.max, fit)
+  ##in future, could support e.g. list("lm", ...)
+  
+  p <- distFunParams
+  
+  stopifnot(p[["method"]] == c("cubic")) ##compatibility with future "method"s
+  
+  ##Transfer parameters
+  obs.max <- p[["obs.max"]]
+  obs.min <- p[["obs.min"]]  
+  head.coef <- p[["head.coef"]]
+  tail.coef <- p[["tail.coef"]]
+  fit <- p[["cubicFit"]]
+  
+  ##Put everything together to get the final function
+  d <- log(d)
+  
+  out <- ifelse(d > obs.max,
+                tail.coef[1] + d*tail.coef[2], ##Common case evaluated first (large d)
+                ifelse(d < obs.min,
+                       head.coef[1] + d*head.coef[2],
+                       fit[1] + fit[2]*d + fit[3]*(d^2) + fit[4]*(d^3) ##2nd most common case evaluated second (small d)
+                )
+  )
+  
+  exp(out)
+}
+
+
+
+
+genes <- unique(ibed$bait_name)
+mart <- useMart("ENSEMBL_MART_ENSEMBL", host = "www.ensembl.org")
+mart <- useDataset("hsapiens_gene_ensembl", mart)
+annotLookup <- getBM(
+  mart = mart,
+  attributes = c(
+    "hgnc_symbol",
+    "entrezgene_id",
+    "ensembl_gene_id",
+    "gene_biotype"),
+  filter = "hgnc_symbol",
+  values = genes,
+  uniqueRows=TRUE,
+  useCache = FALSE)
+
+annotLookup <- as.data.table(annotLookup)
+
+#gene_biotype
+setnames(annotLookup,
+         c("bait_name","entrezgene_id","ensembl_gene_id","gene_biotype"))

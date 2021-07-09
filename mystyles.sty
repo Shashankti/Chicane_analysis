@@ -1,0 +1,20 @@
+\parindent0pt  \parskip10pt             % make block paragraphs
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{listings}
+\usepackage{multirow}
+\usepackage{calc}
+\usepackage{float}
+\usepackage{mathtools}
+\usepackage[backend=biber]{biblatex}
+\addbibresource{tef.bib}
+\DeclareRobustCommand{\bbone}{\text{\usefont{U}{bbold}{m}{n}1}}
+\DeclareMathOperator{\EX}{\mathbb{E}}% expected value
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\numberwithin{equation}{section}
+\setlength{\footskip}{\paperheight
+  -(1in+\voffset+\topmargin+\headheight+\headsep+\textheight)
+  -0.75in}
+\documentclass[12pt]{report}            % Report class in 10 points

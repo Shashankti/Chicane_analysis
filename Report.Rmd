@@ -1,0 +1,73 @@
+---
+output: 
+  pdf_document:
+  includes:
+    in_header: mystyles.sty
+  toc: true 
+  number_sections: TRUE 
+
+---
+
+
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+```
+
+\title{\bf MPr : 901\\
+        \bf Detecting RNA-DNA interactions accounting for distance from transcription start site using a negative binomial model }  
+\author{Shashank Tiwari \\
+        \text{5th Year Integrated MSc. Mathematics}\\
+        \text{Department of Mathematics}\\
+		\textbf{\large{UM-DAE-Centre for Excellence in Basic Sciences}}\\
+        Mumbai\\
+        2020-21\\ 
+    \\
+        \textit{\LARGE{Guide:}}\\
+        \Large{Prof. Nathan Skene}\\[0.1cm]
+        \LARGE{UK-DRI, Imperial College}}
+       
+
+
+
+
+\maketitle
+
+\newpage
+
+# Abstract
+The full importance of RNA/DNA interactions remains largely unknown. Understanding the functional importance and molecular mechanism of such RNA interactions has been challenging. Radicl-Seq is a technology that maps genome-wide RNA-chromatin interactions \cite{Bonetti681924}.  This is important information, because many regulatory interactions are believed to be mediated via RNA/DNA interactions.  We aim to test the importance of these interactions by testing for associations with human disease loci.
+
+
+\newpage
+
+# Acknowledgment
+The success and final outcome of this project required guidance and assistance from
+several people and I am extremely privileged to have got this all along the completion
+of my project.\par
+I respect and thank Prof.Nathan Skene for providing me an opportunity to do
+the project with him and giving me all the requisite support and guidance because of
+which I could enjoy this learning experience.
+I am thankful and fortunate enough to get constant encouragement, support and
+guidance from UM-DAE CEBS which helped me in successfully completing my project
+work.\par
+At the end I would also like to acknowledge Alan Murphy for helping me throughout the project and having fruitful discussions and sharing his ideas with me.
+
+
+
+
+\newpage
+
+
+\tableofcontents
+
+# Introduction 
+
+## Radicl-seq
+
+RNA And DNA Interacting Complexes Ligated and sequenced (RADICL-seq) is a technology developed to map RNA-DNA interactions on a genome wide level. 
+
+
+
+
+
+

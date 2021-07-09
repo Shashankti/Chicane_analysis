@@ -1,0 +1,85 @@
+@InProceedings{10.1007/978-3-540-75142-7_5,
+author="Angluin, Dana
+and Aspnes, James
+and Eisenstat, David",
+editor="Pelc, Andrzej",
+title="A Simple Population Protocol for Fast Robust Approximate Majority",
+booktitle="Distributed Computing",
+year="2007",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="20--32",
+abstract="We describe and analyze a 3-state one-way population protocol for approximate majority in the model in which pairs of agents are drawn uniformly at random to interact. Given an initial configuration of x's, y's and blanks that contains at least one non-blank, the goal is for the agents to reach consensus on one of the values x or y. Additionally, the value chosen should be the majority non-blank initial value, provided it exceeds the minority by a sufficient margin. We prove that with high probability n agents reach consensus in O(n logn) interactions and the value chosen is the majority provided that its initial margin is at least {\$}{\backslash}omega({\backslash}sqrt{\{}n {\backslash}log n{\}}){\$}. This protocol has the additional property of tolerating Byzantine behavior in {\$}o({\backslash}sqrt{\{}n{\}}){\$}of the agents, making it the first known population protocol that tolerates Byzantine agents. Turning to the register machine construction from [2], we apply the 3-state approximate majority protocol and other techniques to speed up the per-step parallel time overhead of the simulation from O(log4n) to O(log2n). To increase the robustness of the phase clock at the heart of the register machine, we describe a consensus version of the phase clock and present encouraging simulation results; its analysis remains an open problem.",
+isbn="978-3-540-75142-7"
+}
+
+@InProceedings{10.1007/978-3-319-66799-7_13,
+author="Condon, Anne
+and Hajiaghayi, Monir
+and Kirkpatrick, David
+and Ma{\v{n}}uch, J{\'a}n",
+editor="Brijder, Robert
+and Qian, Lulu",
+title="Simplifying Analyses of Chemical Reaction Networks for Approximate Majority",
+booktitle="DNA Computing and Molecular Programming",
+year="2017",
+publisher="Springer International Publishing",
+address="Cham",
+pages="188--209",
+abstract="Approximate Majority is a well-studied problem in the context of chemical reaction networks (CRNs) and their close relatives, population protocols: Given a mixture of two types of species with an initial gap between their counts, a CRN computation must reach consensus on the majority species. Angluin, Aspnes, and Eisenstat proposed a simple population protocol for Approximate Majority and proved correctness and {\$}{\$}O({\backslash}log n){\$}{\$}time efficiency with high probability, given an initial gap of size {\$}{\$}{\backslash}omega ({\backslash}sqrt{\{}n{\}}{\backslash}log n){\$}{\$}when the total molecular count in the mixture is n. Motivated by their intriguing but complex proof, we provide simpler, and more intuitive proofs of correctness and efficiency for two bi-molecular CRNs for Approximate Majority, including that of Angluin et al. Key to our approach is to show how the bi-molecular CRNs essentially emulate a tri-molecular CRN with just two reactions and two species. Our results improve on those of Angluin et al. in that they hold even with an initial gap of {\$}{\$}{\backslash}varOmega ({\backslash}sqrt{\{}n {\backslash}log n{\}}){\$}{\$}. Our analysis approach, which leverages the simplicity of a tri-molecular CRN to ultimately reason about bi-molecular CRNs, may be useful in analyzing other CRNs too.",
+isbn="978-3-319-66799-7"
+}
+
+
+@book{hogg,
+    title     = {Probability and Statistical Inference},
+    author    = {Robert V. Hogg, Elliot Tanis and Dale Zimmerman},
+    year      = {2014},
+    publisher = {Pearson}
+}
+
+@book{raul,
+    title       = {Stochastic Numerical Methods: An Introduction for Students and Scientists},
+    author      = {Raúl Toral and Pere Colet},
+    isbn        ={978-3-527-41149-8},
+    year        ={2014},
+    publisher   ={Wiley-VCH; 1 edition}
+}
+
+@book{information,
+    author      ={Thomas Cover and Joy Thomas},
+    title       ={Elements of information theory},
+    year        ={2006},
+    publisher   ={John Wiley and Sons Inc.}
+}
+
+
+
+
+
+
+
+@article{doi:10.1146/annurev.physchem.58.032806.104637,
+author = {Gillespie, Daniel T.},
+title = {Stochastic Simulation of Chemical Kinetics},
+journal = {Annual Review of Physical Chemistry},
+volume = {58},
+number = {1},
+pages = {35-55},
+year = {2007},
+doi = {10.1146/annurev.physchem.58.032806.104637},
+    note ={PMID: 17037977},
+
+URL = { 
+        https://doi.org/10.1146/annurev.physchem.58.032806.104637
+    
+},
+eprint = { 
+        https://doi.org/10.1146/annurev.physchem.58.032806.104637
+    
+}
+,
+    abstract = { AbstractStochastic chemical kinetics describes the time evolution of a well-stirred chemically reacting system in a way that takes into account the fact that molecules come in whole numbers and exhibit some degree of randomness in their dynamical behavior. Researchers are increasingly using this approach to chemical kinetics in the analysis of cellular systems in biology, where the small molecular populations of only a few reactant species can lead to deviations from the predictions of the deterministic differential equations of classical chemical kinetics. After reviewing the supporting theory of stochastic chemical kinetics, I discuss some recent advances in methods for using that theory to make numerical simulations. These include improvements to the exact stochastic simulation algorithm (SSA) and the approximate explicit tau-leaping procedure, as well as the development of two approximate strategies for simulating systems that are dynamically stiff: implicit tau-leaping and the slow-scale SSA. }
+}
+
+
