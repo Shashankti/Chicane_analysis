@@ -3,3 +3,11 @@
 .RData
 .Ruserdata
 score.RData
+Report.Rmd
+Report.html
+Report.log
+Report.pdf
+Report.toc
+WT_100kb_interactions.txt.gz
+mystyles.sty
+tef.bib

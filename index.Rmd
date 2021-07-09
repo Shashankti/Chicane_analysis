@@ -411,7 +411,7 @@ p2 = xmlSVG({show(p2)}, standalone = TRUE)
 p3 = xmlSVG({show(p3)}, standalone = TRUE)
 
 
-slickR(list(p1, p2,p3)) + settings(dots = TRUE, autoplay = TRUE)
+slickR(list(p1, p2,p3))+settings(dots=TRUE,autoplay = TRUE)
 ```
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
@@ -537,6 +537,11 @@ p3 <- ggdraw()+draw_image("ex_count.jpeg")
 rm(p34)
 gc()
 ```
+
+
+
+
+
 
 # Attempt to apply p-value weighting from CHiCAGO
 
@@ -715,6 +720,7 @@ locateFile = function(what, where, pattern){
 
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 load("score.RData")
+ibed$frag.len <- ibed$target.end-ibed$target.start
 ibed_stretch_cis <- ibed[!is.na(distance),.(count2=1:count),names(ibed)]
 ibed_stretch_trans <- ibed[is.na(distance),.(count2=1:count),names(ibed)]
 ibed_stretch <- rbind(ibed_stretch_trans,ibed_stretch_cis)
@@ -857,7 +863,7 @@ p1 = xmlSVG({show(p1)}, standalone = TRUE)
 p2 = xmlSVG({show(p2)}, standalone = TRUE)
 
 
-slickR(list(p1, p2))
+slickR(list(p1, p2))+settings(dots=TRUE,autoplay = TRUE)
 
 ```
 
@@ -957,8 +963,42 @@ p1 = xmlSVG({show(p1)}, standalone = TRUE)
 p2 = xmlSVG({show(p2)}, standalone = TRUE)
 
 
-slickR(list(p1, p2))
+slickR(list(p1, p2))+settings(dots=TRUE,autoplay = TRUE)
 ```
+
+
+# Bait to bait interactions
+There are a total of `r length(unique(ibed$bait.id))` unique baits detected in the interactions and a total of `r length(unique(ibed$target.id))` unique other ends. However out of these other ends `r length(unique(ibed[!ibed$target.id %in% ibed$bait.id]$target.id))` are unique otherEnds such that they are also not a bait. Similarly there are `r length(unique(ibed[!ibed$bait.id %in% ibed$target.id]$bait.id))` baits which are not also an otherEnd. These are the interactions which correspond to non-bait to bait interactions. For otherEnds which are not baits we can compare the relationship with q.value,counts and the length of the otherEnd.
+
+## Frag.length
+
+```{r,fig.cap="non bait-to-bait interactions"}
+ggplot(ibed[!ibed$target.id %in% ibed$bait.id],aes(x=frag.len,y=log10(q.value),color=log10(count)))+
+  geom_point(size=0.3,alpha=0.3)+
+  scale_color_viridis()+
+  theme_cowplot()+
+  ggtitle("OtherEnd length vs q.value")
+```
+
+```{r}
+ggplot(ibed[!ibed$target.id %in% ibed$bait.id],aes(x=frag.len,y=count))+
+  geom_point(size=0.3,alpha=0.3,color="#69b3a2")+
+  theme_cowplot()
+```
+
+## Bait Length
+```{r}
+
+ibed$bait.len <- ibed$bait.end-ibed$bait.start
+ggplot(ibed[!ibed$target.id %in% ibed$bait.id],aes(x=bait.len,y=log10(q.value),color=log10(count)))+
+  geom_point(size=0.3,alpha=0.3)+
+  scale_color_viridis()+
+  theme_cowplot()+
+  ggtitle("Bait length vs q.value")
+```
+
+
+
 
 # Comparison with previous plots
 
@@ -1006,7 +1046,7 @@ p1 = xmlSVG({show(p1)}, standalone = TRUE)
 p2 = xmlSVG({show(p2)}, standalone = TRUE)  
 p3 = xmlSVG({show(p3)}, standalone = TRUE)  
 
-slickR(list(p1, p2,p3)) + settings(dots = TRUE, autoplay = TRUE)
+slickR(list(p1, p2,p3))+settings(dots=TRUE,autoplay = TRUE)
 ```
 
 ## RNVU1-7
@@ -1039,7 +1079,7 @@ p2 = ggplot(RNVU1 ,aes(x=distance,y=log(q.value,base=10)))+
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
 p2 = xmlSVG({show(p2)}, standalone = TRUE)  
-slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)  
+slickR(list(p1, p2))+settings(dots=TRUE,autoplay = TRUE)
 ```
 
 ## RMRP
@@ -1072,7 +1112,7 @@ p2 = ggplot(RMRP,aes(x=distance,y=log(q.value,base=10)))+
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
 p2 = xmlSVG({show(p2)}, standalone = TRUE)  
-slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE) 
+slickR(list(p1, p2)) +settings(dots=TRUE,autoplay = TRUE)
 ```
 
 ## EBF1
@@ -1106,7 +1146,7 @@ p2 = ggplot(EBF1,aes(x=distance,y=log(q.value,base=10)))+
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
 p2 = xmlSVG({show(p2)}, standalone = TRUE)  
-slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
+slickR(list(p1, p2)) +settings(dots=TRUE,autoplay = TRUE)
 ```
 
 ## TENM4
@@ -1140,7 +1180,7 @@ p2 = ggplot(TENM4,aes(x=distance,y=log(q.value,base=10)))+
 
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
 p2 = xmlSVG({show(p2)}, standalone = TRUE)  
-slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
+slickR(list(p1, p2))+settings(dots=TRUE,autoplay = TRUE)
 ```
 
 ## NEAT1
