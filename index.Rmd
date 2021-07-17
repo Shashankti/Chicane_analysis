@@ -1011,7 +1011,7 @@ Previously we had seen certain plots which stood out when looking at the relatio
 
 ibed <- ibed[!is.na(distance)]
 MALAT1 <- ibed[ibed$bait_name=="MALAT1"]
-MALAT1 <- MALAT1[!is.na(MALAT1$distance)]
+MALAT1 <- MALAT1[is.na(MALAT1$distance)]
 q.count <- quantile(MALAT1$count,c(0.30,0.60,0.90,0.95))
 MALAT1$q.count <- with(MALAT1,ifelse(count<q.count[1],0,
                                  ifelse(count<q.count[2],1,
@@ -1188,6 +1188,7 @@ slickR(list(p1, p2))+settings(dots=TRUE,autoplay = TRUE)
 ```{r}
 #NEAT1
 NEAT1 <- ibed[ibed$bait_name=="NEAT1"]
+NEAT1 <- NEAT1[is.na(NEAT1$distance)]
 q.count <- quantile(NEAT1$count,c(0.30,0.60,0.90,0.95))
 NEAT1$q.count <- with(NEAT1,ifelse(count<q.count[1],0,
                                  ifelse(count<q.count[2],1,
@@ -1389,4 +1390,11 @@ p2 = ggplot(PCDH9,aes(x=distance,y=log(q.value,base=10)))+
 p1 = xmlSVG({show(p1)}, standalone = TRUE)  
 p2 = xmlSVG({show(p2)}, standalone = TRUE)  
 slickR(list(p1, p2)) + settings(dots = TRUE, autoplay = TRUE)
+```
+
+
+```{r,echo=FALSE,message=FALSE,results='hide'}
+rm(MALAT1)
+rm(ibed)
+gc()
 ```

@@ -1,0 +1,256 @@
+---
+title: "Comparision of different runs"
+author: "Shashank Tiwari"
+date: "Updated<br> `r Sys.Date()`"
+output: 
+  rmarkdown::html_document: 
+    theme: spacelab
+    highlight: zenburn 
+    code_folding: show 
+    toc: true 
+    toc_float: true
+    smooth_scroll: true
+    number_sections: false 
+    self_contained: true 
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=T, message=F}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  dpi=350,
+  fig.height = 6,
+  fig.width = 7.00787 #178mm
+)  
+knitr::opts_chunk$set(warning = FALSE) 
+options(knitr.duplicate.label = "allow")
+#Input
+library(knitr)
+library(png)
+library(gridExtra)
+library(ggplot2)
+library(GenomicRanges)
+library(chicane)
+library(data.table)
+library(dplyr)
+library(stringr)
+library(cowplot)
+library(viridis)
+library(slickR)
+library(svglite)
+library(patchwork)
+library(magick)
+library(DT)
+```
+
+
+In our initial run of Chicane we observed that output contained almost 100% of bait to bait interactions. Another key thing we noticed was the number of unique baits and otherEnds. The output had far lesser number of baits present than compared to the input baits file. Apart from this it was noted that a great proportion of otherEnds were also classified as baits hence, when we looked at the lengths of the otherEnds we observed that Chicane has merged otherEnds and the length of the otherEnds was much higher than what we expected to see.
+
+## Solutions
+
+To overcome these issues we looked to rmove the overlapping regions from the input otherEnd and baits file as suggested by Dr. Syed. We observe that raw data has around 33k unique RNAs as baits, however if remove the baits which have an overlap with each other we are left with 22k unique baits. We are not sure if this approach is viable as we would lose critical information from those baits. It was also suggested that instead of usign the otherEnds from the raw data form Radicl-seq we use bins of 2kb for the entire genome for running chicane. Here we compare the outputs from these different approaches to understand what method is best suited for our use.
+
+## The run
+1. Initialy we use the otherEnd from the raw data file, the unique DNA tag rows. We remove the overlapping regions within this file using genomic ranges. Next we intersect this file with the baits file. Note that the baits file does contain overlappng regions.
+2. Similar to the first run we define the otherEnds however this time we remove the overlapping regions from the baits file before we intersect it with the fragment file.
+3. For this run we use the entire genome split into bins of 2kb as our fragments file. These bins are intersected with baits file containg overlapping regions.
+4. Similar to the previous run we still use the 2kb bins however this time we use a baits file which has overlapping regions removed from itself.
+
+```{r}
+#Read the data
+res_with_ovrlap <- fread("/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.results.txt")
+res_wo_ovrlap <- fread("/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.results.wo.baitsoverlap.txt")
+res_wo_ovrlap$target.len <- res_wo_ovrlap$target.end-res_wo_ovrlap$target.start
+res_binned <- fread("/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.resuls.binned.txt")
+res_binned$target.len <- res_binned$target.end-res_binned$target.start
+res_binned_wo_ovrlap <-
+  fread("/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.results.binned.wo.baits.txt")
+res_binned_wo_ovrlap$target.len <- res_binned_wo_ovrlap$target.end-res_binned_wo_ovrlap$target.start
+```
+
+
+The first major thing we notice is that none of the outputs have a NA q.values as we had seen before.This indicates that the model is fit better when overlapping regions are removed
+
+## Comparing number of unique baits in the output.
+
+```{r table, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+tabl <- "  # Comapring the output baits
+| Runs                  | Baits(input)  | Baits(Output) | Bait-to-bait | 
+|---------------        |:-------------:|--------------:|-------------:|
+| Raw data              | 33931         | 32955         | 41.56% |
+| Raw data(wo_overlap)  | 22093         | 21647         | 48.51% |
+| Binned                | 33931         | 33060         | 40.64% |
+| Binned(wo_overlap)    | 22093         | 21700         | 47.68% |
+"
+cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
+```
+```{r table1, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+tabl1 <- "  # Comapring the output fragments which are not classified as baits
+| Runs                  | Frags(input)  | Frags(Output) | Nonbait frags(input) | Nonbait frags(output) |
+|----------------------:|:-------------:|--------------:| --------------------:|----------------------:|
+| Raw data              | 7435356       | 7373301       | 7401425              | 7352301               | 
+| Raw data(wo_overlap)  | 7423518       | 7384342       | 7401425              | 7352144               |
+| Binned                | 680094        | 551739        | 658001               | 519619                |
+| Binned(wo_overlap)    | 668256        | 540627        | 646163               | 519423                |
+"
+cat(tabl1) # output the table in a format good for HTML/PDF/docx conversion
+```
+
+## Fragment Lengths
+
+To check if chicane is still merging the otherEnds we look at the lengths of the otherEnds and compare it with the input file. We do so by looking at the otherEnds which are not classified as baits.
+
+```{r}
+#raw data with overlap
+summary(res_with_ovrlap[!res_with_ovrlap$target.id %in% res_with_ovrlap$bait.id]$target.len)
+ggplot(res_with_ovrlap[!res_with_ovrlap$target.id %in% res_with_ovrlap$bait.id] %>% arrange(count),
+       aes(x=target.len,y=count))+
+  geom_point(size=0.3,alpha=0.3,color="#69b3a2")+
+  theme_cowplot()+
+  ggtitle("OtherEnd length vs count for first run")
+```
+```{r,echo=FALSE,message=FALSE,results='hide'}
+gc()
+```
+
+As we can see that there are still some interactions which have otherEnd length much higher than we input in the fragment file. Perhaps this is happening because Chicane is still merging the overlapping baits together. To confirm this we plot this for the second run
+
+```{r}
+#raw data without overlap
+summary(res_wo_ovrlap[!res_wo_ovrlap$target.id %in% res_wo_ovrlap$bait.id]$target.len)
+ggplot(res_wo_ovrlap[!res_wo_ovrlap$target.id %in% res_wo_ovrlap$bait.id] %>% arrange(count),
+       aes(x=target.len,y=count))+
+  geom_point(size=0.3,alpha=0.3,color="#69b3a2")+
+  theme_cowplot()+
+  ggtitle("OtherEnd length vs count for 2nd run")
+```
+
+So there are still some interactions where the length of the otherEnds is much higher than we expected. We plot this for the remaining runs as well.
+
+```{r,fig.show="hold",out.width="50%",fig.cap="Distribution of counts",message=FALSE}
+# binned runs
+par(mar=c(4,4,.1,.1))
+ggplot(res_binned[!res_binned$target.id %in% res_binned$bait.id] %>% arrange(count),
+       aes(x=target.len,y=count))+
+  geom_point(size=0.3,alpha=0.3,color="#69b3a2")+
+  theme_cowplot()+
+  ggtitle("OtherEnd length vs count for 3rd run")
+ggplot(res_binned_wo_ovrlap[!res_binned_wo_ovrlap$target.id %in% res_binned_wo_ovrlap$bait.id] %>% arrange(count),
+       aes(x=target.len,y=count))+
+  geom_point(size=0.3,alpha=0.3,color="#69b3a2")+
+  theme_cowplot()+
+  ggtitle("OtherEnd length vs count for 4th run")
+
+```
+
+```{r,echo=FALSE,message=FALSE,results='hide'}
+gc()
+```
+
+
+## Compare significant interactions
+
+```{r}
+signif_raw <- res_with_ovrlap[res_with_ovrlap$q.value<0.05]
+signif_raw$type <- as.factor("raw_data")
+signif_raw_wo <- res_wo_ovrlap[res_wo_ovrlap$q.value<0.05]
+signif_raw_wo$type <- as.factor("raw_data_wo_ovrlap")
+signif_bin <- res_binned[res_binned$q.value<0.05]
+signif_bin$type <- as.factor("binned")
+signif_bin_wo <- res_binned_wo_ovrlap[res_binned_wo_ovrlap$q.value<0.05]
+signif_bin_wo$type <- as.factor("binned_wo_ovrlap")
+```
+
+```{r,echo=FALSE,message=FALSE,results='hide'}
+rm(res_binned)
+rm(res_binned_wo_ovrlap)
+rm(res_wo_ovrlap)
+rm(res_with_ovrlap)
+gc()
+```
+
+
+```{r table3, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+tabl2 <- "  # Comapring significant interactions
+| Runs                  | Total         | Cis           | Trans  |
+|---------------        |:-------------:|--------------:|-------:|
+| Raw data              | 0.094%        | 17.52%        | 82.47% |
+| Raw data(wo_overlap)  | 0.097%        | 12.22%        | 87.74% |
+| Binned                | 0.132%        | 16.56%        | 83.43% |
+| Binned(wo_overlap)    | 0.134%        | 12.61%        | 87.38% |
+"
+cat(tabl2) # output the table in a format good for HTML/PDF/docx conversion
+```
+
+For the significant interactions we can compare the distance of interactions. First we modify the data to suit the plots better
+
+```{r}
+cis_1 <- signif_raw[!is.na(distance),.(count2=1:count),names(signif_raw)]
+cis_1$type <- as.factor("raw_data")
+cis_2 <- signif_raw_wo[!is.na(distance),.(count2=1:count),names(signif_raw_wo)]
+cis_2$type <- as.factor("raw_data_wo_ovrlap")
+cis_3 <- signif_bin[!is.na(distance),.(count2=1:count),names(signif_bin)]
+cis_3$type <- as.factor("binned")
+cis_4 <- signif_bin_wo[!is.na(distance),.(count2=1:count),names(signif_bin_wo)]
+cis_4$type <- as.factor("binned_wo_ovrlap")
+merged1 <- rbind(cis_1,cis_2,cis_3,cis_4)
+```
+
+```{r}
+ggplot(merged1,aes(log10(distance),fill=type,colour=type))+
+  geom_density(alpha=0.1)+
+  theme_cowplot()+
+  scale_fill_manual(name="Different runs",
+                  values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+    scale_colour_manual(name="Different runs",
+                        values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+    geom_vline(xintercept=log(300000,base=10), colour="grey") +
+    annotate(x=log(300000,base=10),y=2,label="300Kb",vjust=2,geom="label")+
+    xlab("Log 10 Distance from Interaction to RNA")
+```
+
+
+We can further normalise this distance with the RNA length and compare with our previous run
+
+```{r}
+merged1[,bait.length:=bait.end-bait.start]
+merged1[,stnd_dist:=distance/bait.length]
+ggplot(merged1,aes(log10(stnd_dist),fill=type,colour=type))+
+  geom_density(alpha=0.1)+
+  theme_cowplot()+
+  scale_fill_manual(name="Different runs",
+                  values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+    scale_colour_manual(name="Different runs",
+                        values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+    geom_vline(xintercept=log(1,base=10), colour="grey") +
+    geom_vline(xintercept=log(120,base=10), colour="grey") +
+    annotate(x=log(3,base=10),y=1.8,label="RNA Length",vjust=2,geom="label")+
+    annotate(x=log(400,base=10),y=1.8,label="120x RNA Length",vjust=2,
+                geom="label")+
+    xlab("Log 10 Distance from Interaction to RNA of RNA Length")
+
+```
+
+
+What we can conclude from these plots is that the results on are not very different based on the input fragment file, i.e. the fragment file from the raw data and the binned genome have almost identical distribution for cis interactions. A major difference can be seen if the overlapping regions from the baits file are removed. The peak shift very significantly without the overlapping regions. This is something we need to look further into and find a way to remove overlapping regions from the baits file without losing this critical information from those baits. 
+
+We also should compare the trans significant interactions. Since we cannot look at distance for these interactions, we look at the counts distibution
+
+```{r}
+merged2 <- rbind(signif_raw,signif_raw_wo,signif_bin,signif_bin_wo)
+merged2_trans <- merged2[is.na(distance)]
+ggplot(merged2_trans,aes(log10(count),fill=type,colour=type))+
+  geom_density(alpha=0.1)+
+  theme_cowplot()+
+  scale_fill_manual(name="Different runs",
+                  values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+    scale_colour_manual(name="Different runs",
+                        values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+  ggtitle("Distribution of counts")
+
+```
+
+```{r,echo=FALSE,message=FALSE,results='hide'}
+gc()
+```

@@ -7,3 +7,5 @@ navbar:
       href: index.html
     - text: "About Data"
       href: about.html
+    - text: "Comparision of different runs"
+      href: compare.html

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Shashank Tiwari" />
+
+
+<title>Comparision of different runs</title>
+
+<script src="site_libs/header-attrs-2.9/header-attrs.js"></script>
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/spacelab.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  { color: #cccccc; background-color: #303030; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ffcfaf; } /* Alert */
+code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bn { color: #dca3a3; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #f0dfaf; } /* ControlFlow */
+code span.ch { color: #dca3a3; } /* Char */
+code span.cn { color: #dca3a3; font-weight: bold; } /* Constant */
+code span.co { color: #7f9f7f; } /* Comment */
+code span.cv { color: #7f9f7f; font-weight: bold; } /* CommentVar */
+code span.do { color: #7f9f7f; } /* Documentation */
+code span.dt { color: #dfdfbf; } /* DataType */
+code span.dv { color: #dcdccc; } /* DecVal */
+code span.er { color: #c3bf9f; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #c0bed1; } /* Float */
+code span.fu { color: #efef8f; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #7f9f7f; font-weight: bold; } /* Information */
+code span.kw { color: #f0dfaf; } /* Keyword */
+code span.op { color: #f0efd0; } /* Operator */
+code span.ot { color: #efef8f; } /* Other */
+code span.pp { color: #ffcfaf; font-weight: bold; } /* Preprocessor */
+code span.sc { color: #dca3a3; } /* SpecialChar */
+code span.ss { color: #cc9393; } /* SpecialString */
+code span.st { color: #cc9393; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #cc9393; } /* VerbatimString */
+code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Chicane-analysis</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About Data</a>
+</li>
+<li>
+  <a href="compare.html">Comparision of different runs</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Comparision of different runs</h1>
+<h4 class="author">Shashank Tiwari</h4>
+<h4 class="date">Updated<br> 2021-07-17</h4>
+
+</div>
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">collapse =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dpi=</span><span class="dv">350</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">fig.height =</span> <span class="dv">6</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">fig.width =</span> <span class="fl">7.00787</span> <span class="co">#178mm</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)  </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">warning =</span> <span class="cn">FALSE</span>) </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">knitr.duplicate.label =</span> <span class="st">&quot;allow&quot;</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#Input</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(png)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GenomicRanges)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(chicane)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cowplot)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(viridis)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(slickR)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(svglite)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(magick)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DT)</span></code></pre></div>
+<p>In our initial run of Chicane we observed that output contained almost 100% of bait to bait interactions. Another key thing we noticed was the number of unique baits and otherEnds. The output had far lesser number of baits present than compared to the input baits file. Apart from this it was noted that a great proportion of otherEnds were also classified as baits hence, when we looked at the lengths of the otherEnds we observed that Chicane has merged otherEnds and the length of the otherEnds was much higher than what we expected to see.</p>
+<div id="solutions" class="section level2">
+<h2>Solutions</h2>
+<p>To overcome these issues we looked to rmove the overlapping regions from the input otherEnd and baits file as suggested by Dr. Syed. We observe that raw data has around 33k unique RNAs as baits, however if remove the baits which have an overlap with each other we are left with 22k unique baits. We are not sure if this approach is viable as we would lose critical information from those baits. It was also suggested that instead of usign the otherEnds from the raw data form Radicl-seq we use bins of 2kb for the entire genome for running chicane. Here we compare the outputs from these different approaches to understand what method is best suited for our use.</p>
+</div>
+<div id="the-run" class="section level2">
+<h2>The run</h2>
+<ol style="list-style-type: decimal">
+<li>Initialy we use the otherEnd from the raw data file, the unique DNA tag rows. We remove the overlapping regions within this file using genomic ranges. Next we intersect this file with the baits file. Note that the baits file does contain overlappng regions.</li>
+<li>Similar to the first run we define the otherEnds however this time we remove the overlapping regions from the baits file before we intersect it with the fragment file.</li>
+<li>For this run we use the entire genome split into bins of 2kb as our fragments file. These bins are intersected with baits file containg overlapping regions.</li>
+<li>Similar to the previous run we still use the 2kb bins however this time we use a baits file which has overlapping regions removed from itself.</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Read the data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>res_with_ovrlap <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">&quot;/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.results.txt&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>res_wo_ovrlap <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">&quot;/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.results.wo.baitsoverlap.txt&quot;</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>res_wo_ovrlap<span class="sc">$</span>target.len <span class="ot">&lt;-</span> res_wo_ovrlap<span class="sc">$</span>target.end<span class="sc">-</span>res_wo_ovrlap<span class="sc">$</span>target.start</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>res_binned <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">&quot;/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.resuls.binned.txt&quot;</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>res_binned<span class="sc">$</span>target.len <span class="ot">&lt;-</span> res_binned<span class="sc">$</span>target.end<span class="sc">-</span>res_binned<span class="sc">$</span>target.start</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>res_binned_wo_ovrlap <span class="ot">&lt;-</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fread</span>(<span class="st">&quot;/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.results.binned.wo.baits.txt&quot;</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>res_binned_wo_ovrlap<span class="sc">$</span>target.len <span class="ot">&lt;-</span> res_binned_wo_ovrlap<span class="sc">$</span>target.end<span class="sc">-</span>res_binned_wo_ovrlap<span class="sc">$</span>target.start</span></code></pre></div>
+<p>The first major thing we notice is that none of the outputs have a NA q.values as we had seen before.This indicates that the model is fit better when overlapping regions are removed</p>
+</div>
+<div id="comparing-number-of-unique-baits-in-the-output." class="section level2">
+<h2>Comparing number of unique baits in the output.</h2>
+<p># Comapring the output baits | Runs | Baits(input) | Baits(Output) | Bait-to-bait | |————— |:————-:|————–:|————-:| | Raw data | 33931 | 32955 | 41.56% | | Raw data(wo_overlap) | 22093 | 21647 | 48.51% | | Binned | 33931 | 33060 | 40.64% | | Binned(wo_overlap) | 22093 | 21700 | 47.68% | # Comapring the output fragments which are not classified as baits | Runs | Frags(input) | Frags(Output) | Nonbait frags(input) | Nonbait frags(output) | |———————-:|:————-:|————–:| ——————–:|———————-:| | Raw data | 7435356 | 7373301 | 7401425 | 7352301 | | Raw data(wo_overlap) | 7423518 | 7384342 | 7401425 | 7352144 | | Binned | 680094 | 551739 | 658001 | 519619 | | Binned(wo_overlap) | 668256 | 540627 | 646163 | 519423 |</p>
+</div>
+<div id="fragment-lengths" class="section level2">
+<h2>Fragment Lengths</h2>
+<p>To check if chicane is still merging the otherEnds we look at the lengths of the otherEnds and compare it with the input file. We do so by looking at the otherEnds which are not classified as baits.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#raw data with overlap</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(res_with_ovrlap[<span class="sc">!</span>res_with_ovrlap<span class="sc">$</span>target.id <span class="sc">%in%</span> res_with_ovrlap<span class="sc">$</span>bait.id]<span class="sc">$</span>target.len)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="do">##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. </span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="do">##      9.00     26.00     32.00     42.19     50.00 145576.00</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(res_with_ovrlap[<span class="sc">!</span>res_with_ovrlap<span class="sc">$</span>target.id <span class="sc">%in%</span> res_with_ovrlap<span class="sc">$</span>bait.id] <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(count),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span>target.len,<span class="at">y=</span>count))<span class="sc">+</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.3</span>,<span class="at">alpha=</span><span class="fl">0.3</span>,<span class="at">color=</span><span class="st">&quot;#69b3a2&quot;</span>)<span class="sc">+</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_cowplot</span>()<span class="sc">+</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;OtherEnd length vs count for first run&quot;</span>)</span></code></pre></div>
+<p><img src="compare_files/figure-html/unnamed-chunk-2-1.png" width="2452.7545" /></p>
+<p>As we can see that there are still some interactions which have otherEnd length much higher than we input in the fragment file. Perhaps this is happening because Chicane is still merging the overlapping baits together. To confirm this we plot this for the second run</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#raw data without overlap</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(res_wo_ovrlap[<span class="sc">!</span>res_wo_ovrlap<span class="sc">$</span>target.id <span class="sc">%in%</span> res_wo_ovrlap<span class="sc">$</span>bait.id]<span class="sc">$</span>target.len)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="do">##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. </span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="do">##      9.0     26.0     32.0     42.2     50.0 145576.0</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(res_wo_ovrlap[<span class="sc">!</span>res_wo_ovrlap<span class="sc">$</span>target.id <span class="sc">%in%</span> res_wo_ovrlap<span class="sc">$</span>bait.id] <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(count),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span>target.len,<span class="at">y=</span>count))<span class="sc">+</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.3</span>,<span class="at">alpha=</span><span class="fl">0.3</span>,<span class="at">color=</span><span class="st">&quot;#69b3a2&quot;</span>)<span class="sc">+</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_cowplot</span>()<span class="sc">+</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;OtherEnd length vs count for 2nd run&quot;</span>)</span></code></pre></div>
+<p><img src="compare_files/figure-html/unnamed-chunk-4-1.png" width="2452.7545" /></p>
+<p>So there are still some interactions where the length of the otherEnds is much higher than we expected. We plot this for the remaining runs as well.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># binned runs</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">4</span>,.<span class="dv">1</span>,.<span class="dv">1</span>))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(res_binned[<span class="sc">!</span>res_binned<span class="sc">$</span>target.id <span class="sc">%in%</span> res_binned<span class="sc">$</span>bait.id] <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(count),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span>target.len,<span class="at">y=</span>count))<span class="sc">+</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.3</span>,<span class="at">alpha=</span><span class="fl">0.3</span>,<span class="at">color=</span><span class="st">&quot;#69b3a2&quot;</span>)<span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_cowplot</span>()<span class="sc">+</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;OtherEnd length vs count for 3rd run&quot;</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(res_binned_wo_ovrlap[<span class="sc">!</span>res_binned_wo_ovrlap<span class="sc">$</span>target.id <span class="sc">%in%</span> res_binned_wo_ovrlap<span class="sc">$</span>bait.id] <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(count),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span>target.len,<span class="at">y=</span>count))<span class="sc">+</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.3</span>,<span class="at">alpha=</span><span class="fl">0.3</span>,<span class="at">color=</span><span class="st">&quot;#69b3a2&quot;</span>)<span class="sc">+</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_cowplot</span>()<span class="sc">+</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;OtherEnd length vs count for 4th run&quot;</span>)</span></code></pre></div>
+<div class="figure">
+<img src="compare_files/figure-html/unnamed-chunk-5-1.png" alt="Distribution of counts" width="50%" /><img src="compare_files/figure-html/unnamed-chunk-5-2.png" alt="Distribution of counts" width="50%" />
+<p class="caption">
+Distribution of counts
+</p>
+</div>
+</div>
+<div id="compare-significant-interactions" class="section level2">
+<h2>Compare significant interactions</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>signif_raw <span class="ot">&lt;-</span> res_with_ovrlap[res_with_ovrlap<span class="sc">$</span>q.value<span class="sc">&lt;</span><span class="fl">0.05</span>]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>signif_raw<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(<span class="st">&quot;raw_data&quot;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>signif_raw_wo <span class="ot">&lt;-</span> res_wo_ovrlap[res_wo_ovrlap<span class="sc">$</span>q.value<span class="sc">&lt;</span><span class="fl">0.05</span>]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>signif_raw_wo<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(<span class="st">&quot;raw_data_wo_ovrlap&quot;</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>signif_bin <span class="ot">&lt;-</span> res_binned[res_binned<span class="sc">$</span>q.value<span class="sc">&lt;</span><span class="fl">0.05</span>]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>signif_bin<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(<span class="st">&quot;binned&quot;</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>signif_bin_wo <span class="ot">&lt;-</span> res_binned_wo_ovrlap[res_binned_wo_ovrlap<span class="sc">$</span>q.value<span class="sc">&lt;</span><span class="fl">0.05</span>]</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>signif_bin_wo<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(<span class="st">&quot;binned_wo_ovrlap&quot;</span>)</span></code></pre></div>
+<p># Comapring significant interactions | Runs | Total | Cis | Trans | |————— |:————-:|————–:|——-:| | Raw data | 0.094% | 17.52% | 82.47% | | Raw data(wo_overlap) | 0.097% | 12.22% | 87.74% | | Binned | 0.132% | 16.56% | 83.43% | | Binned(wo_overlap) | 0.134% | 12.61% | 87.38% |</p>
+<p>For the significant interactions we can compare the distance of interactions. First we modify the data to suit the plots better</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>cis_1 <span class="ot">&lt;-</span> signif_raw[<span class="sc">!</span><span class="fu">is.na</span>(distance),.(<span class="at">count2=</span><span class="dv">1</span><span class="sc">:</span>count),<span class="fu">names</span>(signif_raw)]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>cis_1<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(<span class="st">&quot;raw_data&quot;</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>cis_2 <span class="ot">&lt;-</span> signif_raw_wo[<span class="sc">!</span><span class="fu">is.na</span>(distance),.(<span class="at">count2=</span><span class="dv">1</span><span class="sc">:</span>count),<span class="fu">names</span>(signif_raw_wo)]</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>cis_2<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(<span class="st">&quot;raw_data_wo_ovrlap&quot;</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>cis_3 <span class="ot">&lt;-</span> signif_bin[<span class="sc">!</span><span class="fu">is.na</span>(distance),.(<span class="at">count2=</span><span class="dv">1</span><span class="sc">:</span>count),<span class="fu">names</span>(signif_bin)]</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>cis_3<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(<span class="st">&quot;binned&quot;</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>cis_4 <span class="ot">&lt;-</span> signif_bin_wo[<span class="sc">!</span><span class="fu">is.na</span>(distance),.(<span class="at">count2=</span><span class="dv">1</span><span class="sc">:</span>count),<span class="fu">names</span>(signif_bin_wo)]</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>cis_4<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(<span class="st">&quot;binned_wo_ovrlap&quot;</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>merged1 <span class="ot">&lt;-</span> <span class="fu">rbind</span>(cis_1,cis_2,cis_3,cis_4)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(merged1,<span class="fu">aes</span>(<span class="fu">log10</span>(distance),<span class="at">fill=</span>type,<span class="at">colour=</span>type))<span class="sc">+</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">alpha=</span><span class="fl">0.1</span>)<span class="sc">+</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_cowplot</span>()<span class="sc">+</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">name=</span><span class="st">&quot;Different runs&quot;</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">values=</span><span class="fu">c</span>(<span class="st">&quot;#69b3a2&quot;</span>,<span class="st">&quot;blue&quot;</span>,<span class="st">&quot;darkgoldenrod4&quot;</span>,<span class="st">&quot;coral1&quot;</span>))<span class="sc">+</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_manual</span>(<span class="at">name=</span><span class="st">&quot;Different runs&quot;</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>                        <span class="at">values=</span><span class="fu">c</span>(<span class="st">&quot;#69b3a2&quot;</span>,<span class="st">&quot;blue&quot;</span>,<span class="st">&quot;darkgoldenrod4&quot;</span>,<span class="st">&quot;coral1&quot;</span>))<span class="sc">+</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="at">xintercept=</span><span class="fu">log</span>(<span class="dv">300000</span>,<span class="at">base=</span><span class="dv">10</span>), <span class="at">colour=</span><span class="st">&quot;grey&quot;</span>) <span class="sc">+</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="at">x=</span><span class="fu">log</span>(<span class="dv">300000</span>,<span class="at">base=</span><span class="dv">10</span>),<span class="at">y=</span><span class="dv">2</span>,<span class="at">label=</span><span class="st">&quot;300Kb&quot;</span>,<span class="at">vjust=</span><span class="dv">2</span>,<span class="at">geom=</span><span class="st">&quot;label&quot;</span>)<span class="sc">+</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;Log 10 Distance from Interaction to RNA&quot;</span>)</span></code></pre></div>
+<p><img src="compare_files/figure-html/unnamed-chunk-10-1.png" width="2452.7545" /></p>
+<p>We can further normalise this distance with the RNA length and compare with our previous run</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>merged1[,bait.length<span class="sc">:</span><span class="er">=</span>bait.end<span class="sc">-</span>bait.start]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>merged1[,stnd_dist<span class="sc">:</span><span class="er">=</span>distance<span class="sc">/</span>bait.length]</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(merged1,<span class="fu">aes</span>(<span class="fu">log10</span>(stnd_dist),<span class="at">fill=</span>type,<span class="at">colour=</span>type))<span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">alpha=</span><span class="fl">0.1</span>)<span class="sc">+</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_cowplot</span>()<span class="sc">+</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">name=</span><span class="st">&quot;Different runs&quot;</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">values=</span><span class="fu">c</span>(<span class="st">&quot;#69b3a2&quot;</span>,<span class="st">&quot;blue&quot;</span>,<span class="st">&quot;darkgoldenrod4&quot;</span>,<span class="st">&quot;coral1&quot;</span>))<span class="sc">+</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_manual</span>(<span class="at">name=</span><span class="st">&quot;Different runs&quot;</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">values=</span><span class="fu">c</span>(<span class="st">&quot;#69b3a2&quot;</span>,<span class="st">&quot;blue&quot;</span>,<span class="st">&quot;darkgoldenrod4&quot;</span>,<span class="st">&quot;coral1&quot;</span>))<span class="sc">+</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="at">xintercept=</span><span class="fu">log</span>(<span class="dv">1</span>,<span class="at">base=</span><span class="dv">10</span>), <span class="at">colour=</span><span class="st">&quot;grey&quot;</span>) <span class="sc">+</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="at">xintercept=</span><span class="fu">log</span>(<span class="dv">120</span>,<span class="at">base=</span><span class="dv">10</span>), <span class="at">colour=</span><span class="st">&quot;grey&quot;</span>) <span class="sc">+</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="at">x=</span><span class="fu">log</span>(<span class="dv">3</span>,<span class="at">base=</span><span class="dv">10</span>),<span class="at">y=</span><span class="fl">1.8</span>,<span class="at">label=</span><span class="st">&quot;RNA Length&quot;</span>,<span class="at">vjust=</span><span class="dv">2</span>,<span class="at">geom=</span><span class="st">&quot;label&quot;</span>)<span class="sc">+</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="at">x=</span><span class="fu">log</span>(<span class="dv">400</span>,<span class="at">base=</span><span class="dv">10</span>),<span class="at">y=</span><span class="fl">1.8</span>,<span class="at">label=</span><span class="st">&quot;120x RNA Length&quot;</span>,<span class="at">vjust=</span><span class="dv">2</span>,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>                <span class="at">geom=</span><span class="st">&quot;label&quot;</span>)<span class="sc">+</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;Log 10 Distance from Interaction to RNA of RNA Length&quot;</span>)</span></code></pre></div>
+<p><img src="compare_files/figure-html/unnamed-chunk-11-1.png" width="2452.7545" /></p>
+<p>What we can conclude from these plots is that the results on are not very different based on the input fragment file, i.e. the fragment file from the raw data and the binned genome have almost identical distribution for cis interactions. A major difference can be seen if the overlapping regions from the baits file are removed. The peak shift very significantly without the overlapping regions. This is something we need to look further into and find a way to remove overlapping regions from the baits file without losing this critical information from those baits.</p>
+<p>We also should compare the trans significant interactions. Since we cannot look at distance for these interactions, we look at the counts distibution</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>merged2 <span class="ot">&lt;-</span> <span class="fu">rbind</span>(signif_raw,signif_raw_wo,signif_bin,signif_bin_wo)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>merged2_trans <span class="ot">&lt;-</span> merged2[<span class="fu">is.na</span>(distance)]</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(merged2_trans,<span class="fu">aes</span>(<span class="fu">log10</span>(count),<span class="at">fill=</span>type,<span class="at">colour=</span>type))<span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">alpha=</span><span class="fl">0.1</span>)<span class="sc">+</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_cowplot</span>()<span class="sc">+</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">name=</span><span class="st">&quot;Different runs&quot;</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">values=</span><span class="fu">c</span>(<span class="st">&quot;#69b3a2&quot;</span>,<span class="st">&quot;blue&quot;</span>,<span class="st">&quot;darkgoldenrod4&quot;</span>,<span class="st">&quot;coral1&quot;</span>))<span class="sc">+</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_manual</span>(<span class="at">name=</span><span class="st">&quot;Different runs&quot;</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">values=</span><span class="fu">c</span>(<span class="st">&quot;#69b3a2&quot;</span>,<span class="st">&quot;blue&quot;</span>,<span class="st">&quot;darkgoldenrod4&quot;</span>,<span class="st">&quot;coral1&quot;</span>))<span class="sc">+</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Distribution of counts&quot;</span>)</span></code></pre></div>
+<p><img src="compare_files/figure-html/unnamed-chunk-12-1.png" width="2452.7545" /></p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
