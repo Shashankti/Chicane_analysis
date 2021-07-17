@@ -42,6 +42,7 @@ library(svglite)
 library(patchwork)
 library(magick)
 library(DT)
+library(kableExtra)
 ```
 
 
@@ -74,28 +75,21 @@ The first major thing we notice is that none of the outputs have a NA q.values a
 
 ## Comparing number of unique baits in the output.
 
-```{r table, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
-tabl <- "  # Comapring the output baits
-| Runs                  | Baits(input)  | Baits(Output) | Bait-to-bait | 
-|---------------        |:-------------:|--------------:|-------------:|
-| Raw data              | 33931         | 32955         | 41.56% |
-| Raw data(wo_overlap)  | 22093         | 21647         | 48.51% |
-| Binned                | 33931         | 33060         | 40.64% |
-| Binned(wo_overlap)    | 22093         | 21700         | 47.68% |
-"
-cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
+```{r,echo=FALSE}
+Runs <- c("Raw data","Raw data(wo_ovrlap)","Binned","Binned(wo_ovrlap)")
+Baits_Input <- c(33931,22093)
+Baits_Output <- c(32955,21647,33060,21700)
+Bait_to_Bait_percentage <- c(41.56,48.51,40.64,47.68)
+Frags_input <- c(7435356,7423518,680094,668256)
+Frags_output <- c(7373301,7384342,551739,540627)
+dt <- data.table(Runs,Baits_Input,Baits_Output,Bait_to_Bait_percentage)
+kable(dt,format = "html")
 ```
-```{r table1, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
-tabl1 <- "  # Comapring the output fragments which are not classified as baits
-| Runs                  | Frags(input)  | Frags(Output) | Nonbait frags(input) | Nonbait frags(output) |
-|----------------------:|:-------------:|--------------:| --------------------:|----------------------:|
-| Raw data              | 7435356       | 7373301       | 7401425              | 7352301               | 
-| Raw data(wo_overlap)  | 7423518       | 7384342       | 7401425              | 7352144               |
-| Binned                | 680094        | 551739        | 658001               | 519619                |
-| Binned(wo_overlap)    | 668256        | 540627        | 646163               | 519423                |
-"
-cat(tabl1) # output the table in a format good for HTML/PDF/docx conversion
-```
+
+
+
+
+
 
 ## Fragment Lengths
 
@@ -170,18 +164,15 @@ rm(res_with_ovrlap)
 gc()
 ```
 
-
-```{r table3, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
-tabl2 <- "  # Comapring significant interactions
-| Runs                  | Total         | Cis           | Trans  |
-|---------------        |:-------------:|--------------:|-------:|
-| Raw data              | 0.094%        | 17.52%        | 82.47% |
-| Raw data(wo_overlap)  | 0.097%        | 12.22%        | 87.74% |
-| Binned                | 0.132%        | 16.56%        | 83.43% |
-| Binned(wo_overlap)    | 0.134%        | 12.61%        | 87.38% |
-"
-cat(tabl2) # output the table in a format good for HTML/PDF/docx conversion
+```{r}
+Total <- c("0.094%","0.097%","0.132%","0.134%")
+Cis <- c("17.52%","12.22%","16.56%","12.61%")
+Trans <- c("82.47%","87.74%","83.43%","87.38%")
+tabl2 <- data.table(Runs,Total,Cis,Trans)
+kable(tabl2,format = "html")
 ```
+
+
 
 For the significant interactions we can compare the distance of interactions. First we modify the data to suit the plots better
 
@@ -252,5 +243,9 @@ ggplot(merged2_trans,aes(log10(count),fill=type,colour=type))+
 ```
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
+rm(signif_bin_wo)
+rm(signif_bin)
+rm(signif_raw)
+rm(signif_raw_wo)
 gc()
 ```
