@@ -57,8 +57,13 @@ To overcome these issues we looked to rmove the overlapping regions from the inp
 2. Similar to the first run we define the otherEnds however this time we remove the overlapping regions from the baits file before we intersect it with the fragment file.
 3. For this run we use the entire genome split into bins of 2kb as our fragments file. These bins are intersected with baits file containg overlapping regions.
 4. Similar to the previous run we still use the 2kb bins however this time we use a baits file which has overlapping regions removed from itself.
+5. We use 2kb bins for the other ends but the baits are filtered smartly, instead of merging the overlapping baits, we reduce the length of the bait by changing the end position of the baits.
 
-```{r}
+
+
+We first examine the input baits file. The original baits contains the loaction of all the RNAs including the overlapping regions. It has a total of 60k entries, we reduce the overlapping regions and have a total of 41k baits in the input file. The RNAs which are dropped are the ones which are totaly contained inside another bait region.
+
+```{r,eval=FALSE}
 #Read the data
 res_with_ovrlap <- fread("/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.results.txt")
 res_wo_ovrlap <- fread("/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.results.wo.baitsoverlap.txt")
@@ -68,7 +73,23 @@ res_binned$target.len <- res_binned$target.end-res_binned$target.start
 res_binned_wo_ovrlap <-
   fread("/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.results.binned.wo.baits.txt")
 res_binned_wo_ovrlap$target.len <- res_binned_wo_ovrlap$target.end-res_binned_wo_ovrlap$target.start
+res_binned_2  <- fread("/home/master/shared_folder/radicl_seq/Data/Processed/graphs/chicane.results.binned.wo.baits_2.txt")
+res_binned_2$target.len  <- res_binned_2[,target.end-target.start]
+res_binned_2$type <- as.factor("binned_with_proper_baits")
+res_with_ovrlap$type <- as.factor("raw_data")
+res_wo_ovrlap$type <- as.factor("raw_data_wo_ovrlap")
+res_binned$type <- as.factor("binned")
+res_binned_wo_ovrlap$type <- as.factor("binned_wo_ovrlap")
+merged_runs <- rbind(res_with_ovrlap,res_wo_ovrlap,res_binned,res_binned_wo_ovrlap,res_binned_2)
+merged_runs$signif <- ifelse(merged_runs$q.value<0.05,"significant","non-significant")
+merged_runs$bait.trans.count <- NULL
+merged_runs$target.trans.count <- NULL
 ```
+```{r,echo=FALSE}
+load("merged.RData")
+```
+
+
 
 
 The first major thing we notice is that none of the outputs have a NA q.values as we had seen before.This indicates that the model is fit better when overlapping regions are removed
@@ -82,12 +103,20 @@ Baits_Output <- c(32955,21647,33060,21700)
 Bait_to_Bait_percentage <- c(41.56,48.51,40.64,47.68)
 Frags_input <- c(7435356,7423518,680094,668256)
 Frags_output <- c(7373301,7384342,551739,540627)
+NonbaitFrags_input <-c(7401425,7401425,658001,646163)
+NonbaitFrags_output <- c(7352301,7352144,519619,519423)
 dt <- data.table(Runs,Baits_Input,Baits_Output,Bait_to_Bait_percentage)
+tabl <- data.table(Runs,Frags_input,Frags_output,NonbaitFrags_input,NonbaitFrags_output)
 kable(dt,format = "html")
 ```
 
+We can still see that a small fractions of baits are being filtered out from the input file. This percentage is not very high though.
 
-
+Similarly we can check if the otherEnds are being filtered out as well.
+```{r}
+kable(tabl,format = "html")
+```
+Therefore we can see that chicane filters out fragments from the output. For the run with 2kb runs this is however expected as we are not including zero counts but we still see fragments being filtered in the other runs.
 
 
 
@@ -96,73 +125,81 @@ kable(dt,format = "html")
 To check if chicane is still merging the otherEnds we look at the lengths of the otherEnds and compare it with the input file. We do so by looking at the otherEnds which are not classified as baits.
 
 ```{r}
-#raw data with overlap
-summary(res_with_ovrlap[!res_with_ovrlap$target.id %in% res_with_ovrlap$bait.id]$target.len)
-ggplot(res_with_ovrlap[!res_with_ovrlap$target.id %in% res_with_ovrlap$bait.id] %>% arrange(count),
-       aes(x=target.len,y=count))+
-  geom_point(size=0.3,alpha=0.3,color="#69b3a2")+
+ggplot(merged_runs[!merged_runs$target.id %in% merged_runs$bait.id & merged_runs$type %in% c('raw_data','raw_data_wo_ovrlap')]
+       ,aes(x=signif,y=log10(target.len),fill=type))+
+  geom_violin(trim = TRUE)+
+  geom_boxplot(width=0.1,outlier.shape = NA)+
   theme_cowplot()+
-  ggtitle("OtherEnd length vs count for first run")
+  facet_wrap(~type)+
+  scale_fill_viridis(discrete = T,alpha = 0.5)+
+  theme(legend.position = "none")+
+  ylab("log10(otherEnd Length)")+
+  xlab("Type of run")+
+  scale_y_continuous(limits = quantile(log10(merged_runs[!merged_runs$target.id %in%  merged_runs$bait.id]$target.len), c(0.1, 0.9)))
+# ylim1 = boxplot.stats(log10(merged_runs[!merged_runs$target.id %in% merged_runs$bait.id]$target.len))$stats[c(1,5)]
+# p1 = p0 + coord_cartesian(ylim = ylim1*1.05)
+# plot(p1)
 ```
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 gc()
 ```
 
-As we can see that there are still some interactions which have otherEnd length much higher than we input in the fragment file. Perhaps this is happening because Chicane is still merging the overlapping baits together. To confirm this we plot this for the second run
+
+```{r} 
+ggplot(merged_runs[!merged_runs$target.id %in% merged_runs$bait.id & !merged_runs$type %in% c('raw_data','raw_data_wo_ovrlap')]
+       ,aes(x=signif,y=log10(target.len),fill=type))+
+  geom_violin(trim = TRUE)+
+  geom_boxplot(width=0.1,outlier.shape = NA)+
+  theme_cowplot()+
+  facet_wrap(~type)+
+  scale_fill_viridis(discrete = T,alpha = 0.5)+
+  theme(legend.position = "none")+
+  ylab("log10(otherEnd Length)")+
+  xlab("Type of run")+
+  scale_y_continuous(limits = quantile(log10(merged_runs[!merged_runs$target.id %in% merged_runs$bait.id & !merged_runs$type %in% c('raw_data','raw_data_wo_ovrlap')]$target.len), c(0.1, 0.9)))
+```
+
+```{r,echo=FALSE,message=FALSE,results='hide'}
+gc()
+```
+
+As we can see from the first plots that there is difference in the lenghts of the otherends for significant interactions, however for binned runs we cant get proper plots since most interactions are 2kb bins. We can check what percentage of interactions have otherEnds length greater than 2kb.
 
 ```{r}
-#raw data without overlap
-summary(res_wo_ovrlap[!res_wo_ovrlap$target.id %in% res_wo_ovrlap$bait.id]$target.len)
-ggplot(res_wo_ovrlap[!res_wo_ovrlap$target.id %in% res_wo_ovrlap$bait.id] %>% arrange(count),
-       aes(x=target.len,y=count))+
-  geom_point(size=0.3,alpha=0.3,color="#69b3a2")+
-  theme_cowplot()+
-  ggtitle("OtherEnd length vs count for 2nd run")
-```
-
-So there are still some interactions where the length of the otherEnds is much higher than we expected. We plot this for the remaining runs as well.
-
-```{r,fig.show="hold",out.width="50%",fig.cap="Distribution of counts",message=FALSE}
-# binned runs
-par(mar=c(4,4,.1,.1))
-ggplot(res_binned[!res_binned$target.id %in% res_binned$bait.id] %>% arrange(count),
-       aes(x=target.len,y=count))+
-  geom_point(size=0.3,alpha=0.3,color="#69b3a2")+
-  theme_cowplot()+
-  ggtitle("OtherEnd length vs count for 3rd run")
-ggplot(res_binned_wo_ovrlap[!res_binned_wo_ovrlap$target.id %in% res_binned_wo_ovrlap$bait.id] %>% arrange(count),
-       aes(x=target.len,y=count))+
-  geom_point(size=0.3,alpha=0.3,color="#69b3a2")+
-  theme_cowplot()+
-  ggtitle("OtherEnd length vs count for 4th run")
-
+lit = NULL
+lit1 = NULL
+for(i in unique(merged_runs$type)){
+  lit[i] <- 100*length(merged_runs[merged_runs$type==i &merged_runs$target.len>1999 & merged_runs$signif=="non-significant"]$target.id)/
+    length(merged_runs[merged_runs$type==i & merged_runs$signif=="non-significant"]$target.id)
+  lit1[i] <- 100*length(merged_runs[merged_runs$type==i &merged_runs$target.len>1999 & merged_runs$signif=="significant"]$target.id)/
+    length(merged_runs[merged_runs$type==i & merged_runs$signif=="significant"]$target.id)
+}
+tabl1 <- data.table(unique(merged_runs$type),lit,lit1)
+colnames(tabl1) <- c("Runs","non-significant","Significant")
+kable(tabl1,format = "html")
 ```
 
 ```{r,echo=FALSE,message=FALSE,results='hide'}
 gc()
 ```
 
+However we can remove bait-to-bait interactions from this list to see the overall results
+
+```{r}
+for(i in unique(merged_runs$type)){
+   lit[i] <- 100*length(merged_runs[merged_runs$type==i &merged_runs$target.len>1999 & merged_runs$signif=="non-significant" & !merged_runs$target.id %in% merged_runs$bait.id]$target.id)/
+     length(merged_runs[merged_runs$type==i & merged_runs$signif=="non-significant" & !merged_runs$target.id %in% merged_runs$bait.id]$target.id)
+   lit1[i] <- 100*length(merged_runs[merged_runs$type==i &merged_runs$target.len>1999 & merged_runs$signif=="significant" & !merged_runs$target.id %in% merged_runs$bait.id]$target.id)/
+     length(merged_runs[merged_runs$type==i & merged_runs$signif=="significant" & !merged_runs$target.id %in% merged_runs$bait.id]$target.id)
+ }
+tabl3 <- data.table(unique(merged_runs$type),lit,lit1)
+colnames(tabl3) <- c("Runs","non-significant","Significant")
+kable(tabl3,format = "html")
+```
 
 ## Compare significant interactions
 
-```{r}
-signif_raw <- res_with_ovrlap[res_with_ovrlap$q.value<0.05]
-signif_raw$type <- as.factor("raw_data")
-signif_raw_wo <- res_wo_ovrlap[res_wo_ovrlap$q.value<0.05]
-signif_raw_wo$type <- as.factor("raw_data_wo_ovrlap")
-signif_bin <- res_binned[res_binned$q.value<0.05]
-signif_bin$type <- as.factor("binned")
-signif_bin_wo <- res_binned_wo_ovrlap[res_binned_wo_ovrlap$q.value<0.05]
-signif_bin_wo$type <- as.factor("binned_wo_ovrlap")
-```
 
-```{r,echo=FALSE,message=FALSE,results='hide'}
-rm(res_binned)
-rm(res_binned_wo_ovrlap)
-rm(res_wo_ovrlap)
-rm(res_with_ovrlap)
-gc()
-```
 
 ```{r}
 Total <- c("0.094%","0.097%","0.132%","0.134%")
@@ -177,15 +214,9 @@ kable(tabl2,format = "html")
 For the significant interactions we can compare the distance of interactions. First we modify the data to suit the plots better
 
 ```{r}
-cis_1 <- signif_raw[!is.na(distance),.(count2=1:count),names(signif_raw)]
-cis_1$type <- as.factor("raw_data")
-cis_2 <- signif_raw_wo[!is.na(distance),.(count2=1:count),names(signif_raw_wo)]
-cis_2$type <- as.factor("raw_data_wo_ovrlap")
-cis_3 <- signif_bin[!is.na(distance),.(count2=1:count),names(signif_bin)]
-cis_3$type <- as.factor("binned")
-cis_4 <- signif_bin_wo[!is.na(distance),.(count2=1:count),names(signif_bin_wo)]
-cis_4$type <- as.factor("binned_wo_ovrlap")
-merged1 <- rbind(cis_1,cis_2,cis_3,cis_4)
+signif <- merged_runs[merged_runs$q.value<0.05]
+merged1<- signif[!is.na(distance),.(count2=1:count),names(merged_runs)]
+
 ```
 
 ```{r}
@@ -193,9 +224,9 @@ ggplot(merged1,aes(log10(distance),fill=type,colour=type))+
   geom_density(alpha=0.1)+
   theme_cowplot()+
   scale_fill_manual(name="Different runs",
-                  values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+                  values=c("#69b3a2","blue","darkgoldenrod4","coral1","red"))+
     scale_colour_manual(name="Different runs",
-                        values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+                        values=c("#69b3a2","blue","darkgoldenrod4","coral1","red"))+
     geom_vline(xintercept=log(300000,base=10), colour="grey") +
     annotate(x=log(300000,base=10),y=2,label="300Kb",vjust=2,geom="label")+
     xlab("Log 10 Distance from Interaction to RNA")
@@ -211,9 +242,9 @@ ggplot(merged1,aes(log10(stnd_dist),fill=type,colour=type))+
   geom_density(alpha=0.1)+
   theme_cowplot()+
   scale_fill_manual(name="Different runs",
-                  values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+                  values=c("#69b3a2","blue","darkgoldenrod4","coral1","red"))+
     scale_colour_manual(name="Different runs",
-                        values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+                        values=c("#69b3a2","blue","darkgoldenrod4","coral1","red"))+
     geom_vline(xintercept=log(1,base=10), colour="grey") +
     geom_vline(xintercept=log(120,base=10), colour="grey") +
     annotate(x=log(3,base=10),y=1.8,label="RNA Length",vjust=2,geom="label")+
@@ -229,23 +260,48 @@ What we can conclude from these plots is that the results on are not very differ
 We also should compare the trans significant interactions. Since we cannot look at distance for these interactions, we look at the counts distibution
 
 ```{r}
-merged2 <- rbind(signif_raw,signif_raw_wo,signif_bin,signif_bin_wo)
-merged2_trans <- merged2[is.na(distance)]
+#merged2 <- rbind(signif_raw,signif_raw_wo,signif_bin,signif_bin_wo)
+merged2_trans <- signif[is.na(distance)]
 ggplot(merged2_trans,aes(log10(count),fill=type,colour=type))+
   geom_density(alpha=0.1)+
   theme_cowplot()+
   scale_fill_manual(name="Different runs",
-                  values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+                  values=c("#69b3a2","blue","darkgoldenrod4","coral1","red"))+
     scale_colour_manual(name="Different runs",
-                        values=c("#69b3a2","blue","darkgoldenrod4","coral1"))+
+                        values=c("#69b3a2","blue","darkgoldenrod4","coral1","red"))+
   ggtitle("Distribution of counts")
 
 ```
 
+```{r,eval=FALSE,echo=FALSE}
+ggplot(merged_runs[is.na(merged_runs$distance)],aes(x=signif,y=count,fill=type))+
+    geom_violin(trim = TRUE)+
+    theme_cowplot()+
+    ggtitle("Distribution of counts")+
+    geom_boxplot(width=0.1,outlier.shape = NA)+
+    theme_cowplot()+
+    facet_wrap(~type)+
+    scale_fill_viridis(discrete = T,alpha = 0.5)+
+    theme(legend.position = "none")+
+    ylab("counts")+
+    xlab("Type of run")+
+    scale_y_continuous(limits = quantile(merged_runs[is.na(merged_runs$distance)]$count, c(0.1, 0.9)))
+```
+```{r}
+ggplot(merged2_trans,aes(x=signif,y=count,fill=type))+
+    geom_violin(trim = TRUE)+
+    theme_cowplot()+
+    ggtitle("Distribution of counts")+
+    geom_boxplot(width=0.1,outlier.shape = NA)+
+    theme_cowplot()+
+    facet_wrap(~type)+
+    scale_fill_viridis(discrete = T,alpha = 0.5)+
+    theme(legend.position = "none")+
+    ylab("counts")+
+    xlab("Type of run")+
+    scale_y_continuous(limits = quantile(merged2_trans$count, c(0.1, 0.9)))
+```
+
 ```{r,echo=FALSE,message=FALSE,results='hide'}
-rm(signif_bin_wo)
-rm(signif_bin)
-rm(signif_raw)
-rm(signif_raw_wo)
 gc()
 ```
